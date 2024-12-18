@@ -1,1 +1,11 @@
-spring.application.name=mar-de-beleza-system
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/mar_de_beleza_db
+    username: postgres
+    password: admin123
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: update
+    show-sql: true
