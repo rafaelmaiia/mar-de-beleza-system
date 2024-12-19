@@ -7,6 +7,7 @@ import br.com.rafaelmaia.mar_de_beleza_system.services.exceptions.ObjectNotFound
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -18,5 +19,10 @@ public class ClientServiceImpl implements ClientService {
     public Client findClientById(Long id) {
         Optional<Client> obj = repository.findById(id);
         return obj.orElseThrow(() -> new ObjectNotFoundException("Client not found!"));
+    }
+
+    @Override
+    public List<Client> findAllClients() {
+        return repository.findAll();
     }
 }
