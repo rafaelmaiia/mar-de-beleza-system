@@ -48,6 +48,12 @@ public class ClientServiceImpl implements ClientService {
         return repository.save(mapper.map(obj, Client.class));
     }
 
+    @Override
+    public void deleteClient(Long id) {
+        findClientById(id);
+        repository.deleteById(id);
+    }
+
     private void findByEmail(ClientDTO obj) {
         Optional<Client> client = repository.findByEmail(obj.getEmail());
 

@@ -49,4 +49,10 @@ public class ClientController {
         obj.setId(id);
         return ResponseEntity.ok().body(mapper.map(service.updateClient(obj), ClientDTO.class));
     }
+
+    @DeleteMapping(value = ID)
+    public ResponseEntity<ClientDTO> deleteClient(@PathVariable Long id) {
+        service.deleteClient(id);
+        return ResponseEntity.noContent().build();
+    }
 }

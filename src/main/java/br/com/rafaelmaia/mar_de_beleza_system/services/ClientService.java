@@ -11,4 +11,5 @@ public interface ClientService {
     List<Client> findAllClients();
     Client createClient(ClientDTO obj);
     Client updateClient(ClientDTO obj);
+    void deleteClient(Long id);
 }
