@@ -40,10 +40,18 @@ public class ClientServiceImpl implements ClientService {
         return repository.save(mapper.map(obj, Client.class));
     }
 
+    @Override
+    public Client updateClient(ClientDTO obj) {
+        findByEmail(obj);
+        findByPhone(obj);
+
+        return repository.save(mapper.map(obj, Client.class));
+    }
+
     private void findByEmail(ClientDTO obj) {
         Optional<Client> client = repository.findByEmail(obj.getEmail());
 
-        if (client.isPresent()) {
+        if (client.isPresent() && !client.get().getId().equals(obj.getId())) {
             throw new DataIntegrityViolationException("Email already registered in the system");
         }
     }
@@ -51,7 +59,7 @@ public class ClientServiceImpl implements ClientService {
     private void findByPhone(ClientDTO obj) {
         Optional<Client> client = repository.findByPhone(obj.getPhone());
 
-        if (client.isPresent()) {
+        if (client.isPresent() && !client.get().getId().equals(obj.getId())) {
             throw new DataIntegrityViolationException("Phone already registered in the system");
         }
     }

@@ -10,4 +10,5 @@ public interface ClientService {
     Client findClientById(Long id);
     List<Client> findAllClients();
     Client createClient(ClientDTO obj);
+    Client updateClient(ClientDTO obj);
 }

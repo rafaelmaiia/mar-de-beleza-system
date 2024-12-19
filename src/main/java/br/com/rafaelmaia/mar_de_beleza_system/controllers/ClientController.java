@@ -15,13 +15,14 @@ import java.util.List;
 @RequestMapping(value = "/client")
 public class ClientController {
 
+    public static final String ID = "/{id}";
     @Autowired
     private ModelMapper mapper;
 
     @Autowired
     private ClientService service;
 
-    @GetMapping(value = "/{id}")
+    @GetMapping(value = ID)
     public ResponseEntity<ClientDTO> findClientById(@PathVariable Long id) {
 
         return ResponseEntity.ok().body(mapper.map(service.findClientById(id), ClientDTO.class));
@@ -38,8 +39,14 @@ public class ClientController {
     @PostMapping
     public ResponseEntity<ClientDTO> createClient(@RequestBody ClientDTO obj) {
         URI uri = ServletUriComponentsBuilder.
-                fromCurrentRequest().path("/{id}").buildAndExpand(service.createClient(obj).getId()).toUri();
+                fromCurrentRequest().path(ID).buildAndExpand(service.createClient(obj).getId()).toUri();
 
         return ResponseEntity.created(uri).build();
+    }
+
+    @PutMapping(value = ID)
+    public ResponseEntity<ClientDTO> updateClient(@PathVariable Long id, @RequestBody ClientDTO obj) {
+        obj.setId(id);
+        return ResponseEntity.ok().body(mapper.map(service.updateClient(obj), ClientDTO.class));
     }
 }
