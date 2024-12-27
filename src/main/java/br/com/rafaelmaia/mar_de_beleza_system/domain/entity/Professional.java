@@ -19,7 +19,14 @@ public class Professional implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Column(nullable = false)
     private String name;
+
+    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "contact_id")
     private Contact contact;
+
+    @Column(nullable = false, unique = true)
     private String cpf;
 }

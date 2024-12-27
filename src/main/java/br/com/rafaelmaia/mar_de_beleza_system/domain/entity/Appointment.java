@@ -19,18 +19,33 @@ public class Appointment implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
+    @ManyToOne
+    @JoinColumn(name = "client_id", nullable = false)
     private Client client;
+
+    @ManyToOne
+    @JoinColumn(name = "service_id", nullable = false)
     private Service service;
+
+    @ManyToOne
+    @JoinColumn(name = "professional_id", nullable = false)
     private Professional professional;
+
+    @Column(nullable = false)
     private LocalDateTime appointmentDate;
+
+    @Enumerated(EnumType.STRING)
     private AppointmentStatus status;
+
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "payment_id")
     private Payment payment;
-    private ClientPreferences clientPreferences;
+
+    @Column(length = 500)
     private String observations;
-    private LocalDate createdAt;
+
+    @Column(nullable = false, updatable = false)
+    private LocalDate createdAt = LocalDate.now();
+
     private LocalDateTime nextAppointment;
 }

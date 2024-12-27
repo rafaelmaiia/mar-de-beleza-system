@@ -20,6 +20,9 @@ public class ClientPreferences implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
     private String observations;
-    private ServiceType favoriteTypeServices;
+
+    @Enumerated(EnumType.STRING)
+    private ServiceType favoriteTypeService;
 }

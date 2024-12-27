@@ -23,13 +23,22 @@ public class Payment implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Column(nullable = false)
     private BigDecimal amount;
+
     private BigDecimal discount;
+
+    @Column(nullable = false)
     private LocalDateTime paymentDate;
+
+    @Enumerated(EnumType.STRING)
     private PaymentType paymentType;
+
+    @Enumerated(EnumType.STRING)
     private PaymentStatus paymentStatus;
+
+    @OneToOne
+    @JoinColumn(name = "appointment_id", nullable = false)
     private Appointment appointment;
-    private Professional professional;
-    private Client client;
-    private Service service;
 }

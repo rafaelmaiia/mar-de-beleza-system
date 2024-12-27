@@ -26,5 +26,7 @@ public class Address implements Serializable {
     private String neighborhood;
     private String city;
     private String state;
+
+    @Column(name = "zip_code")
     private String zipCode;
 }
