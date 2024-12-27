@@ -52,7 +52,7 @@ public class Client implements Serializable {
 
     public List<Appointment> getAppointmentHistory() {
         return this.appointments.stream()
-                .filter(a -> a.getStatus() == AppointmentStatus.COMPLETED)
+                .filter(a -> a.getStatus() == AppointmentStatus.DONE)
                 .collect(Collectors.toList());
     }
 }
