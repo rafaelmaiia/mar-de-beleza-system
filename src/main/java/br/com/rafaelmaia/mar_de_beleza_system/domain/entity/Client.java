@@ -30,7 +30,7 @@ public class Client implements Serializable {
     @Column(nullable = false)
     private String name;
 
-    private LocalDate dateOfBirth;
+    private LocalDate birthDate;
 
     @Enumerated(EnumType.STRING)
     private Gender gender; // Use um enum para representar o gênero
@@ -38,10 +38,6 @@ public class Client implements Serializable {
     @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "contact_id", nullable = false)
     private Contact contact;
-
-    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
-    @JoinColumn(name = "address_id", nullable = false)
-    private Address address;
 
     @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "preferences_id")

@@ -21,8 +21,8 @@ public class ClientPreferences implements Serializable {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String observations;
-
     @Enumerated(EnumType.STRING)
     private ServiceType favoriteTypeService;
+
+    private String observations;
 }

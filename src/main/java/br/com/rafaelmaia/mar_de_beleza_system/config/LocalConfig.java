@@ -21,8 +21,27 @@ public class LocalConfig {
 
     @PostConstruct
     public void startDB() {
-        Client c1 = new Client(null, "Rafael", LocalDate.now(), Gender.MALE, new Contact(null, "rafael@gmail.com", "85912345678", "85912345678"), null, null, null);
-        Client c2 = new Client(null, "Rafael", LocalDate.now(), Gender.MALE, new Contact(null, "luiz@gmail.com", "85956781234", "85956781234"), null, null, null);
+        Contact contact = Contact.builder()
+                .phone("123456789")
+                .whatsapp("123456789")
+                .build();
+
+        Client c1 = Client.builder()
+                .name("Rafael")
+                .birthDate(LocalDate.of(2000, 10, 24))
+                .gender(Gender.MALE)
+                .contact(contact)
+                .build();
+
+        Client c2 = Client.builder()
+                .name("Luiz")
+                .birthDate(LocalDate.now())
+                .gender(Gender.MALE)
+                .contact(Contact.builder()
+                        .phone("987654321")
+                        .whatsapp("987654321")
+                        .build())
+                .build();
         repository.saveAll(List.of(c1, c2));
     }
 }

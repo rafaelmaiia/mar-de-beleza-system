@@ -20,7 +20,7 @@ public class Contact implements Serializable {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
+    @Column(unique = true)
     private String email;
 
     @Column(nullable = false)
