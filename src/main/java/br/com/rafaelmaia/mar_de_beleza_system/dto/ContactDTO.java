@@ -13,5 +13,5 @@ public class ContactDTO {
 
     private Long id;
     private String phone;
-    private String whatsapp;
+    private Boolean phoneIsWhatsapp;
 }

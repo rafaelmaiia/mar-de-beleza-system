@@ -36,12 +36,8 @@ public class Client implements Serializable {
     private Gender gender; // Use um enum para representar o gênero
 
     @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
-    @JoinColumn(name = "contact_id", nullable = false)
+    @JoinColumn(name = "contact_id")
     private Contact contact;
-
-    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
-    @JoinColumn(name = "preferences_id")
-    private ClientPreferences preferences;
 
     @OneToMany(mappedBy = "client", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Appointment> appointments = new ArrayList<>();

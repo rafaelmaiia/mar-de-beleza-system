@@ -2,14 +2,22 @@ package br.com.rafaelmaia.mar_de_beleza_system.dto;
 
 import br.com.rafaelmaia.mar_de_beleza_system.domain.enums.AppointmentStatus;
 import br.com.rafaelmaia.mar_de_beleza_system.domain.enums.ServiceType;
+import lombok.*;
 
 import java.time.LocalDateTime;
 
-public class AppointmentSummaryDTO {
+@Setter
+@Getter
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
+public class AppointmentDTO {
 
     private Long id;
+    private ClientDTO client;
+    private ServiceType serviceName;
+    private ProfessionalDTO professional;
     private LocalDateTime appointmentDate;
     private AppointmentStatus status;
-    private ProfessionalDTO professionalName; // Nome do profissional associado
-    private ServiceType serviceName; // Nome do serviço associado
+    private String observations;
 }

@@ -20,11 +20,8 @@ public class Contact implements Serializable {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(unique = true)
-    private String email;
-
     @Column(nullable = false)
     private String phone;
 
-    private String whatsapp;
+    private Boolean phoneIsWhatsapp;
 }

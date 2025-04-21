@@ -26,7 +26,4 @@ public class Professional implements Serializable {
     @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "contact_id")
     private Contact contact;
-
-    @Column(nullable = false, unique = true)
-    private String cpf;
 }

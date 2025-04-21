@@ -23,7 +23,7 @@ public class LocalConfig {
     public void startDB() {
         Contact contact = Contact.builder()
                 .phone("123456789")
-                .whatsapp("123456789")
+                .phoneIsWhatsapp(true)
                 .build();
 
         Client c1 = Client.builder()
@@ -39,7 +39,7 @@ public class LocalConfig {
                 .gender(Gender.MALE)
                 .contact(Contact.builder()
                         .phone("987654321")
-                        .whatsapp("987654321")
+                        .phoneIsWhatsapp(true)
                         .build())
                 .build();
         repository.saveAll(List.of(c1, c2));

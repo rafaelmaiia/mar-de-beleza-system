@@ -1,11 +1,11 @@
 package br.com.rafaelmaia.mar_de_beleza_system.domain.entity;
 
 import br.com.rafaelmaia.mar_de_beleza_system.domain.enums.AppointmentStatus;
+import br.com.rafaelmaia.mar_de_beleza_system.domain.enums.ServiceType;
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.io.Serializable;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
@@ -27,9 +27,9 @@ public class Appointment implements Serializable {
     @JoinColumn(name = "client_id", nullable = false)
     private Client client;
 
-    @ManyToOne
-    @JoinColumn(name = "service_id", nullable = false)
-    private Service service;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private ServiceType serviceType;
 
     @ManyToOne
     @JoinColumn(name = "professional_id", nullable = false)
@@ -41,15 +41,14 @@ public class Appointment implements Serializable {
     @Enumerated(EnumType.STRING)
     private AppointmentStatus status;
 
-    @OneToOne(cascade = CascadeType.ALL)
-    @JoinColumn(name = "payment_id")
-    private Payment payment;
-
     @Column(length = 500)
     private String observations;
 
-    @Column(nullable = false, updatable = false)
-    private LocalDate createdAt = LocalDate.now();
+    @Column(name = "created_at", nullable = false)
+    private LocalDateTime createdAt;
 
-    private LocalDateTime nextAppointment;
+    @PrePersist
+    public void prePersist() {
+        createdAt = LocalDateTime.now();
+    }
 }
