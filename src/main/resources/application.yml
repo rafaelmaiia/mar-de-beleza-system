@@ -1,0 +1,5 @@
+spring:
+  application:
+    name: mar-de-beleza-system
+  profiles:
+    active: local
