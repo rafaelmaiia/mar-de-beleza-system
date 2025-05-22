@@ -3,3 +3,7 @@ spring:
     name: mar-de-beleza-system
   profiles:
     active: local
+spring-doc:
+  paths-to-match: /api/v1/**
+  swagger-ui:
+    use-root-path: true

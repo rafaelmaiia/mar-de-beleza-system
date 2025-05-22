@@ -12,7 +12,7 @@ import java.net.URI;
 import java.util.List;
 
 @RestController
-@RequestMapping(value = "/professional")
+@RequestMapping(value = "/api/v1/professionals")
 public class ProfessionalController {
 
     public static final String ID = "/{id}";
