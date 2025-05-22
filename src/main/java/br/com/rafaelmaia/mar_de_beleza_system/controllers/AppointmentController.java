@@ -1,8 +1,10 @@
 package br.com.rafaelmaia.mar_de_beleza_system.controllers;
 
+import br.com.rafaelmaia.mar_de_beleza_system.controllers.docs.AppointmentControllerDocs;
 import br.com.rafaelmaia.mar_de_beleza_system.dto.AppointmentDTO;
 import br.com.rafaelmaia.mar_de_beleza_system.dto.AppointmentRequestDTO;
 import br.com.rafaelmaia.mar_de_beleza_system.services.AppointmentService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -16,27 +18,32 @@ import java.util.List;
 @RequestMapping("/api/v1/appointments")
 @RequiredArgsConstructor
 @Validated
-public class AppointmentController {
+@Tag(name = "Appointment", description = "Endpoints for Managing Appointment")
+public class AppointmentController implements AppointmentControllerDocs {
 
     private final AppointmentService appointmentService;
 
     @PostMapping
+    @Override
     public ResponseEntity<AppointmentDTO> create(@RequestBody @Valid AppointmentRequestDTO request) {
         AppointmentDTO created = appointmentService.create(request);
         return new ResponseEntity<>(created, HttpStatus.CREATED);
     }
 
     @GetMapping
+    @Override
     public ResponseEntity<List<AppointmentDTO>> findAll() {
         return ResponseEntity.ok(appointmentService.findAllAppointments());
     }
 
     @GetMapping("/{id}")
+    @Override
     public ResponseEntity<AppointmentDTO> findById(@PathVariable Long id) {
         return ResponseEntity.ok(appointmentService.findAppointmentById(id));
     }
 
     @PutMapping("/{id}")
+    @Override
     public ResponseEntity<AppointmentDTO> update(
             @PathVariable Long id,
             @RequestBody @Valid AppointmentRequestDTO request) {
@@ -44,6 +51,7 @@ public class AppointmentController {
     }
 
     @DeleteMapping("/{id}")
+    @Override
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         appointmentService.delete(id);
         return ResponseEntity.noContent().build();
