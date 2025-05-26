@@ -17,9 +17,15 @@ public class ClientDTO {
     private ContactDTO contact;
 
     public static ClientDTO fromEntity(Client client) {
+        if (client == null) return null;
+
         ClientDTO dto = new ClientDTO();
         dto.setId(client.getId());
         dto.setName(client.getName());
+
+        if (client.getContact() != null) {
+            dto.setContact(ContactDTO.fromEntity(client.getContact()));
+        }
         return dto;
     }
 }

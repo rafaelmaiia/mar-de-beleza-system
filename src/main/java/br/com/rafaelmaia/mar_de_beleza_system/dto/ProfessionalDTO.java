@@ -17,9 +17,16 @@ public class ProfessionalDTO {
     private ContactDTO contact;
 
     public static ProfessionalDTO fromEntity(Professional professional) {
+        if (professional == null) return null;
+
         ProfessionalDTO dto = new ProfessionalDTO();
         dto.setId(professional.getId());
         dto.setName(professional.getName());
+
+        if (professional.getContact() != null) {
+            dto.setContact(ContactDTO.fromEntity(professional.getContact()));
+        }
+
         return dto;
     }
 }

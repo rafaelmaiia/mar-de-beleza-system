@@ -3,7 +3,9 @@ package br.com.rafaelmaia.mar_de_beleza_system.config;
 import br.com.rafaelmaia.mar_de_beleza_system.domain.entity.Client;
 import br.com.rafaelmaia.mar_de_beleza_system.domain.entity.Contact;
 import br.com.rafaelmaia.mar_de_beleza_system.domain.enums.Gender;
+import br.com.rafaelmaia.mar_de_beleza_system.repository.AppointmentRepository;
 import br.com.rafaelmaia.mar_de_beleza_system.repository.ClientRepository;
+import br.com.rafaelmaia.mar_de_beleza_system.repository.ProfessionalRepository;
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
@@ -17,7 +19,11 @@ import java.util.List;
 public class LocalConfig {
 
     @Autowired
-    private ClientRepository repository;
+    private ClientRepository clientRepository;
+    @Autowired
+    private ProfessionalRepository professionalRepository;
+    @Autowired
+    private AppointmentRepository appointmentRepository;
 
     @PostConstruct
     public void startDB() {
@@ -42,6 +48,6 @@ public class LocalConfig {
                         .phoneIsWhatsapp(true)
                         .build())
                 .build();
-        repository.saveAll(List.of(c1, c2));
+        clientRepository.saveAll(List.of(c1, c2));
     }
 }
