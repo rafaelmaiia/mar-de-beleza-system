@@ -1,12 +1,13 @@
 package br.com.rafaelmaia.mar_de_beleza_system.domain.entity;
 
 import br.com.rafaelmaia.mar_de_beleza_system.domain.enums.AppointmentStatus;
-import br.com.rafaelmaia.mar_de_beleza_system.domain.enums.ServiceType;
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "tb_appointment")
@@ -27,13 +28,8 @@ public class Appointment implements Serializable {
     @JoinColumn(name = "client_id", nullable = false)
     private Client client;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private ServiceType serviceType;
-
-    @ManyToOne
-    @JoinColumn(name = "professional_id", nullable = false)
-    private Professional professional;
+    @OneToMany(mappedBy = "appointment", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<AppointmentItem> services = new ArrayList<>();
 
     @Column(nullable = false)
     private LocalDateTime appointmentDate;
