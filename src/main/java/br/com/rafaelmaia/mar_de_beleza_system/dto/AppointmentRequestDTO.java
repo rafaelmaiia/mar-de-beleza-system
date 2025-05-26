@@ -6,6 +6,7 @@ import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Getter
 @Setter
@@ -18,15 +19,11 @@ public class AppointmentRequestDTO {
     private Long clientId; // Apenas o ID do cliente
 
     @NotNull
-    private ServiceType serviceName; // Tipo do serviço
-
-    @NotNull
-    private Long professionalId; // Apenas o ID do profissional
+    private List<AppointmentItemRequestDTO> items;
 
     @NotNull
     private LocalDateTime appointmentDate; // Data do agendamento
 
     private AppointmentStatus status; // Status do agendamento
-
     private String observations; // Observações
 }
