@@ -39,6 +39,7 @@ public class AppointmentServiceImpl implements AppointmentService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<AppointmentDTO> findAllAppointments() {
         return appointmentRepository.findAll().stream()
                 .map(this::mapToDTO)
