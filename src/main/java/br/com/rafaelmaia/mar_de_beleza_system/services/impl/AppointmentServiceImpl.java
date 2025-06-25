@@ -1,17 +1,13 @@
 package br.com.rafaelmaia.mar_de_beleza_system.services.impl;
 
-import br.com.rafaelmaia.mar_de_beleza_system.domain.entity.Appointment;
-import br.com.rafaelmaia.mar_de_beleza_system.domain.entity.Client;
-import br.com.rafaelmaia.mar_de_beleza_system.domain.entity.Professional;
+import br.com.rafaelmaia.mar_de_beleza_system.domain.entity.*;
 import br.com.rafaelmaia.mar_de_beleza_system.domain.enums.AppointmentStatus;
-import br.com.rafaelmaia.mar_de_beleza_system.dto.AppointmentDTO;
-import br.com.rafaelmaia.mar_de_beleza_system.dto.AppointmentRequestDTO;
-import br.com.rafaelmaia.mar_de_beleza_system.dto.ClientDTO;
-import br.com.rafaelmaia.mar_de_beleza_system.dto.ProfessionalDTO;
+import br.com.rafaelmaia.mar_de_beleza_system.dto.*;
 import br.com.rafaelmaia.mar_de_beleza_system.repository.AppointmentRepository;
 import br.com.rafaelmaia.mar_de_beleza_system.repository.ClientRepository;
 import br.com.rafaelmaia.mar_de_beleza_system.repository.ProfessionalRepository;
 
+import br.com.rafaelmaia.mar_de_beleza_system.repository.SalonServiceRepository;
 import br.com.rafaelmaia.mar_de_beleza_system.services.AppointmentService;
 import br.com.rafaelmaia.mar_de_beleza_system.services.exceptions.ObjectNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -19,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -26,14 +23,13 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class AppointmentServiceImpl implements AppointmentService {
 
-    @Autowired
     private final AppointmentRepository appointmentRepository;
 
-    @Autowired
     private final ClientRepository clientRepository;
 
-    @Autowired
     private final ProfessionalRepository professionalRepository;
+
+    private final SalonServiceRepository salonServiceRepository;
 
     @Override
     public AppointmentDTO findAppointmentById(Long id) {
@@ -43,6 +39,7 @@ public class AppointmentServiceImpl implements AppointmentService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<AppointmentDTO> findAllAppointments() {
         return appointmentRepository.findAll().stream()
                 .map(this::mapToDTO)
@@ -54,17 +51,31 @@ public class AppointmentServiceImpl implements AppointmentService {
     public AppointmentDTO create(AppointmentRequestDTO request) {
         Client client = clientRepository.findById(request.getClientId())
                 .orElseThrow(() -> new ObjectNotFoundException("Client not found with id " + request.getClientId()));
-        Professional professional = professionalRepository.findById(request.getProfessionalId())
-                .orElseThrow(() -> new ObjectNotFoundException("Professional not found with id " + request.getProfessionalId()));
 
         Appointment appointment = Appointment.builder()
                 .client(client)
-                .professional(professional)
                 .appointmentDate(request.getAppointmentDate())
-                .serviceType(request.getServiceName())
                 .observations(request.getObservations())
                 .status(request.getStatus() != null ? request.getStatus() : AppointmentStatus.SCHEDULED)
+                .services(new ArrayList<>()) // Inicializa a lista de services do salão
                 .build();
+
+        if (request.getItems() != null && !request.getItems().isEmpty()) {
+            for (AppointmentItemRequestDTO itemRequest : request.getItems()) {
+                Professional professional = professionalRepository.findById(itemRequest.getProfessionalId())
+                        .orElseThrow(() -> new ObjectNotFoundException("Professional not found with id " + itemRequest.getProfessionalId()));
+                SalonService salonService = salonServiceRepository.findById(itemRequest.getSalonServiceId())
+                        .orElseThrow(() -> new ObjectNotFoundException("SalonService not found with id " + itemRequest.getSalonServiceId()));
+
+                AppointmentItem appointmentItem = AppointmentItem.builder()
+                        .appointment(appointment)
+                        .service(salonService)
+                        .professional(professional)
+                        .price(itemRequest.getPrice())
+                        .build();
+                appointment.getServices().add(appointmentItem);
+            }
+        }
         appointment = appointmentRepository.save(appointment);
         return mapToDTO(appointment);
     }
@@ -80,21 +91,40 @@ public class AppointmentServiceImpl implements AppointmentService {
                     .orElseThrow(() -> new ObjectNotFoundException("Client not found with id " + request.getClientId()));
             appointment.setClient(client);
         }
-        if (request.getProfessionalId() != null) {
-            Professional professional = professionalRepository.findById(request.getProfessionalId())
-                    .orElseThrow(() -> new ObjectNotFoundException("Professional not found with id " + request.getProfessionalId()));
-            appointment.setProfessional(professional);
+        if (request.getAppointmentDate() != null) {
+            appointment.setAppointmentDate(request.getAppointmentDate());
         }
-        appointment.setAppointmentDate(request.getAppointmentDate());
-        appointment.setServiceType(request.getServiceName());
-        appointment.setObservations(request.getObservations());
-        appointment.setStatus(request.getStatus());
+        if (request.getObservations() != null) {
+            appointment.setObservations(request.getObservations());
+        }
+        if (request.getStatus() != null) {
+            appointment.setStatus(request.getStatus());
+        }
 
+        appointment.getServices().clear(); // Remove os itens antigos da coleção gerenciada pelo Hibernate
+
+        if (request.getItems() != null && !request.getItems().isEmpty()) {
+            for (AppointmentItemRequestDTO itemRequest : request.getItems()) {
+                Professional professional = professionalRepository.findById(itemRequest.getProfessionalId())
+                        .orElseThrow(() -> new ObjectNotFoundException("Professional not found with id " + itemRequest.getProfessionalId()));
+                SalonService salonService = salonServiceRepository.findById(itemRequest.getSalonServiceId())
+                        .orElseThrow(() -> new ObjectNotFoundException("SalonService not found with id " + itemRequest.getSalonServiceId()));
+
+                AppointmentItem appointmentItem = AppointmentItem.builder()
+                        .appointment(appointment)
+                        .service(salonService)
+                        .professional(professional)
+                        .price(itemRequest.getPrice())
+                        .build();
+                appointment.getServices().add(appointmentItem);
+            }
+        }
         appointment = appointmentRepository.save(appointment);
         return mapToDTO(appointment);
     }
 
     @Override
+    @Transactional
     public void delete(Long id) {
         if (!appointmentRepository.existsById(id)) {
             throw new ObjectNotFoundException("Appointment not found with id " + id);
@@ -103,14 +133,6 @@ public class AppointmentServiceImpl implements AppointmentService {
     }
 
     private AppointmentDTO mapToDTO(Appointment appointment) {
-        return AppointmentDTO.builder()
-                .id(appointment.getId())
-                .client(ClientDTO.fromEntity(appointment.getClient()))
-                .professional(ProfessionalDTO.fromEntity(appointment.getProfessional()))
-                .appointmentDate(appointment.getAppointmentDate())
-                .serviceName(appointment.getServiceType())
-                .status(appointment.getStatus())
-                .observations(appointment.getObservations())
-                .build();
+        return AppointmentDTO.fromEntity(appointment);
     }
 }

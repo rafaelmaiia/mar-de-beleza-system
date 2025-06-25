@@ -1,7 +1,9 @@
 package br.com.rafaelmaia.mar_de_beleza_system.controllers;
 
+import br.com.rafaelmaia.mar_de_beleza_system.controllers.docs.ProfessionalControllerDocs;
 import br.com.rafaelmaia.mar_de_beleza_system.dto.ProfessionalDTO;
 import br.com.rafaelmaia.mar_de_beleza_system.services.ProfessionalService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -12,10 +14,10 @@ import java.net.URI;
 import java.util.List;
 
 @RestController
-@RequestMapping(value = "/professional")
-public class ProfessionalController {
+@RequestMapping(value = "/api/v1/professionals")
+@Tag(name = "Professional", description = "Endpoints for Managing Professionals")
+public class ProfessionalController implements ProfessionalControllerDocs {
 
-    public static final String ID = "/{id}";
     @Autowired
     private ModelMapper mapper;
 
@@ -23,12 +25,14 @@ public class ProfessionalController {
     private ProfessionalService service;
 
     @GetMapping(value = ID)
+    @Override
     public ResponseEntity<ProfessionalDTO> findProfessionalById(@PathVariable Long id) {
 
         return ResponseEntity.ok().body(mapper.map(service.findProfessionalById(id), ProfessionalDTO.class));
     }
 
     @GetMapping
+    @Override
     public ResponseEntity<List<ProfessionalDTO>> findAllProfessionals() {
 
         return ResponseEntity.ok().body(
@@ -37,6 +41,7 @@ public class ProfessionalController {
     }
 
     @PostMapping
+    @Override
     public ResponseEntity<ProfessionalDTO> createProfessional(@RequestBody ProfessionalDTO obj) {
         URI uri = ServletUriComponentsBuilder.
                 fromCurrentRequest().path(ID).buildAndExpand(service.createProfessional(obj).getId()).toUri();
@@ -45,12 +50,14 @@ public class ProfessionalController {
     }
 
     @PutMapping(value = ID)
+    @Override
     public ResponseEntity<ProfessionalDTO> updateProfessional(@PathVariable Long id, @RequestBody ProfessionalDTO obj) {
         obj.setId(id);
         return ResponseEntity.ok().body(mapper.map(service.updateProfessional(obj), ProfessionalDTO.class));
     }
 
     @DeleteMapping(value = ID)
+    @Override
     public ResponseEntity<ProfessionalDTO> deleteProfessional(@PathVariable Long id) {
         service.deleteProfessional(id);
         return ResponseEntity.noContent().build();

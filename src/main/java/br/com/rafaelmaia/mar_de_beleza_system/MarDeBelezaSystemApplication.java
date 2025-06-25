@@ -9,5 +9,4 @@ public class MarDeBelezaSystemApplication {
 	public static void main(String[] args) {
 		SpringApplication.run(MarDeBelezaSystemApplication.class, args);
 	}
-
 }
