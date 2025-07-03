@@ -11,6 +11,7 @@ import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
 
 public interface AppointmentControllerDocs {
@@ -31,8 +32,16 @@ public interface AppointmentControllerDocs {
     )
     ResponseEntity<AppointmentDTO> create(@RequestBody @Valid AppointmentRequestDTO request);
 
-    @Operation(summary = "Find All Appointments",
-            description = "Find All Appointments",
+    @Operation(summary = "Buscar agendamentos (com ou sem filtros)",
+            description = "Retorna uma lista de agendamentos.\n" +
+                    "Caso nenhum filtro seja informado, todos os agendamentos cadastrados serão retornados.\n" +
+                    "É possível aplicar um ou mais dos seguintes filtros:\n" +
+                    "\n" +
+                    "- date: data específica do agendamento (yyyy-MM-dd)\n" +
+                    "- professionalId: identificador do profissional\n" +
+                    "- clientId: identificador do cliente\n" +
+                    "\n" +
+                    "Os filtros são opcionais e podem ser combinados entre si.",
             tags = {"Appointment"},
             responses = {
                     @ApiResponse(
@@ -51,7 +60,7 @@ public interface AppointmentControllerDocs {
                     @ApiResponse(description = "Internal Server Error", responseCode = "500", content = @Content)
             }
     )
-    ResponseEntity<List<AppointmentDTO>> findAll();
+    ResponseEntity<List<AppointmentDTO>> findAll(LocalDate date, Long professionalId, Long clientId);
 
     @Operation(summary = "Find a Appointment",
             description = "Find a specific Appointment by their ID",

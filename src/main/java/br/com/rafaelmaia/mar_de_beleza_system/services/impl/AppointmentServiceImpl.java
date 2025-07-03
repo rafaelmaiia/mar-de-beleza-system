@@ -8,13 +8,16 @@ import br.com.rafaelmaia.mar_de_beleza_system.repository.ClientRepository;
 import br.com.rafaelmaia.mar_de_beleza_system.repository.ProfessionalRepository;
 
 import br.com.rafaelmaia.mar_de_beleza_system.repository.SalonServiceRepository;
+import br.com.rafaelmaia.mar_de_beleza_system.repository.specification.AppointmentSpecification;
 import br.com.rafaelmaia.mar_de_beleza_system.services.AppointmentService;
 import br.com.rafaelmaia.mar_de_beleza_system.services.exceptions.ObjectNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -40,8 +43,12 @@ public class AppointmentServiceImpl implements AppointmentService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<AppointmentDTO> findAllAppointments() {
-        return appointmentRepository.findAll().stream()
+    public List<AppointmentDTO> findAllAppointments(LocalDate date, Long professionalId, Long clientId) {
+        // Cria uma especificação combinando os filtros
+        Specification<Appointment> spec = AppointmentSpecification.withFilters(date, professionalId, clientId);
+
+        // Usa o novo método findAll(spec) que veio do JpaSpecificationExecutor
+        return appointmentRepository.findAll(spec).stream()
                 .map(this::mapToDTO)
                 .collect(Collectors.toList());
     }
