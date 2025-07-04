@@ -48,12 +48,12 @@ INSERT INTO tb_professional (id, name, contact_id) VALUES
 -- =============================================
 --  Serviços do Salão (SalonService)
 -- =============================================
-INSERT INTO tb_salon_service (id, name, service_type) VALUES
-(1, 'Design de Sobrancelha com Henna', 'EYEBROW'),
-(2, 'Extensão de Cílios Volume Brasileiro', 'LASH'),
-(3, 'Corte Feminino e Escova', 'HAIR'),
-(4, 'Manicure e Pedicure Simples', 'OTHER'),
-(5, 'Hidratação Capilar Profunda', 'HAIR');
+INSERT INTO tb_salon_service (id, name, service_type, duration_in_minutes, price) VALUES
+(1, 'Design de Sobrancelha com Henna', 'EYEBROW', 45, 50.00),
+(2, 'Extensão de Cílios Volume Brasileiro', 'LASH', 120, 220.00),
+(3, 'Corte Feminino e Escova', 'HAIR', 90, 150.00),
+(4, 'Manicure e Pedicure Simples', 'OTHER', 60, 75.00),
+(5, 'Hidratação Capilar Profunda', 'HAIR', 75, 130.00);
 
 
 -- =============================================
