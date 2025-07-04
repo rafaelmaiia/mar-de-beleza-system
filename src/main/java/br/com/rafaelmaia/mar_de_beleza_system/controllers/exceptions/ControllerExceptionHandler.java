@@ -1,5 +1,6 @@
 package br.com.rafaelmaia.mar_de_beleza_system.controllers.exceptions;
 
+import br.com.rafaelmaia.mar_de_beleza_system.services.exceptions.BusinessRuleException;
 import br.com.rafaelmaia.mar_de_beleza_system.services.exceptions.DataIntegrityViolationException;
 import br.com.rafaelmaia.mar_de_beleza_system.services.exceptions.ObjectNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -48,5 +49,16 @@ public class ControllerExceptionHandler {
         });
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errors);
+    }
+
+    @ExceptionHandler(BusinessRuleException.class)
+    public ResponseEntity<StandardError> businessRule(BusinessRuleException ex, HttpServletRequest request) {
+        StandardError error = new StandardError(
+                LocalDateTime.now(),
+                HttpStatus.CONFLICT.value(),
+                ex.getMessage(),
+                request.getRequestURI());
+
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
     }
 }

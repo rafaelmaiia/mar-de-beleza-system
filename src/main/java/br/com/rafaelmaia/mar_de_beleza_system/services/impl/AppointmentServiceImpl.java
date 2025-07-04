@@ -11,6 +11,7 @@ import br.com.rafaelmaia.mar_de_beleza_system.repository.ProfessionalRepository;
 import br.com.rafaelmaia.mar_de_beleza_system.repository.SalonServiceRepository;
 import br.com.rafaelmaia.mar_de_beleza_system.repository.specification.AppointmentSpecification;
 import br.com.rafaelmaia.mar_de_beleza_system.services.AppointmentService;
+import br.com.rafaelmaia.mar_de_beleza_system.services.exceptions.BusinessRuleException;
 import br.com.rafaelmaia.mar_de_beleza_system.services.exceptions.ObjectNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.jpa.domain.Specification;
@@ -18,6 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -35,6 +37,7 @@ public class AppointmentServiceImpl implements AppointmentService {
     private final SalonServiceRepository salonServiceRepository;
 
     @Override
+    @Transactional(readOnly = true)
     public AppointmentResponseDTO findAppointmentById(Long id) {
         Appointment appointment = appointmentRepository.findById(id)
                 .orElseThrow(() -> new ObjectNotFoundException("Appointment not found with id " + id));
@@ -47,7 +50,7 @@ public class AppointmentServiceImpl implements AppointmentService {
         // Cria uma especificação combinando os filtros
         Specification<Appointment> spec = AppointmentSpecification.withFilters(date, professionalId, clientId);
 
-        // Usa o novo método findAll(spec) que veio do JpaSpecificationExecutor
+        // Usa o novo metodo findAll(spec) que veio do JpaSpecificationExecutor
         return appointmentRepository.findAll(spec).stream()
                 .map(this::mapToDTO)
                 .collect(Collectors.toList());
@@ -56,78 +59,169 @@ public class AppointmentServiceImpl implements AppointmentService {
     @Override
     @Transactional
     public AppointmentResponseDTO create(AppointmentRequestDTO request) {
-        Client client = clientRepository.findById(request.clientId())
-                .orElseThrow(() -> new ObjectNotFoundException("Client not found with id " + request.clientId()));
+        // --- LÓGICA DE VALIDAÇÃO DE CONFLITO ---
 
+        // 1. Buscar as entidades de serviço para obter as durações
+        List<Long> serviceIds = request.items().stream()
+                .map(AppointmentItemRequestDTO::salonServiceId).toList();
+        List<SalonService> requestedServices = salonServiceRepository.findAllById(serviceIds);
+
+        // Garante que todos os serviços solicitados foram encontrados
+        if(requestedServices.size() != serviceIds.size()){
+            throw new ObjectNotFoundException("Um ou mais serviços não foram encontrados.");
+        }
+
+        // 2. Calcule o horário de início e término do NOVO agendamento
+        int totalDurationInMinutes = requestedServices.stream().mapToInt(SalonService::getDurationInMinutes).sum();
+        LocalDateTime newAppointmentStartTime = request.appointmentDate();
+        LocalDateTime newAppointmentEndTime = newAppointmentStartTime.plusMinutes(totalDurationInMinutes);
+
+        // 3. Verifica o conflito para cada profissional no novo agendamento
+        for (AppointmentItemRequestDTO item : request.items()) {
+            Long professionalId = item.professionalId();
+
+            LocalDateTime startOfDay = newAppointmentStartTime.toLocalDate().atStartOfDay();
+            LocalDateTime endOfDay = newAppointmentStartTime.toLocalDate().plusDays(1).atStartOfDay();
+            List<Appointment> existingAppointments = appointmentRepository.findPotentialConflicts(professionalId, startOfDay, endOfDay);
+
+            for (Appointment existingAppointment : existingAppointments) {
+                int existingDuration = existingAppointment.getServices().stream()
+                        .mapToInt(serviceItem -> serviceItem.getService().getDurationInMinutes()).sum();
+                LocalDateTime existingStartTime = existingAppointment.getAppointmentDate();
+                LocalDateTime existingEndTime = existingStartTime.plusMinutes(existingDuration);
+
+                if (newAppointmentStartTime.isBefore(existingEndTime) && newAppointmentEndTime.isAfter(existingStartTime)) {
+                    throw new BusinessRuleException(
+                            "Conflito de horário: O profissional já tem um agendamento das " +
+                                    existingStartTime.toLocalTime() + " às " + existingEndTime.toLocalTime()
+                    );
+                }
+            }
+        }
+
+        // --- LÓGICA DE CRIAÇÃO DA ENTIDADE ---
+        // Se passou por todas as validações, o metodo continua com a criação
+
+        Client client = clientRepository.findById(request.clientId())
+                .orElseThrow(() -> new ObjectNotFoundException("Cliente não encontrado com id " + request.clientId()));
+
+        // Usando o Builder da Entidade
         Appointment appointment = Appointment.builder()
                 .client(client)
                 .appointmentDate(request.appointmentDate())
                 .observations(request.observations())
                 .status(request.status() != null ? request.status() : AppointmentStatus.SCHEDULED)
-                .services(new ArrayList<>()) // Inicializa a lista de services do salão
+                .services(new ArrayList<>())
                 .build();
 
-        if (request.items() != null && !request.items().isEmpty()) {
-            for (AppointmentItemRequestDTO itemRequest : request.items()) {
-                Professional professional = professionalRepository.findById(itemRequest.professionalId())
-                        .orElseThrow(() -> new ObjectNotFoundException("Professional not found with id " + itemRequest.professionalId()));
-                SalonService salonService = salonServiceRepository.findById(itemRequest.salonServiceId())
-                        .orElseThrow(() -> new ObjectNotFoundException("SalonService not found with id " + itemRequest.salonServiceId()));
+        // Criado uma referencia final (que não pode ser alterada) para ser usada na lambda
+        final Appointment finalAppointment = appointment;
 
-                AppointmentItem appointmentItem = AppointmentItem.builder()
-                        .appointment(appointment)
-                        .service(salonService)
-                        .professional(professional)
-                        .price(itemRequest.price())
-                        .build();
-                appointment.getServices().add(appointmentItem);
-            }
-        }
+        // Mapeiando os DTOs de item para Entidades de item
+        List<AppointmentItem> appointmentItems = request.items().stream().map(itemRequest -> {
+            Professional professional = professionalRepository.findById(itemRequest.professionalId())
+                    .orElseThrow(() -> new ObjectNotFoundException("Profissional não encontrado com id " + itemRequest.professionalId()));
+
+            // Reutilizando os serviços já buscados para evitar ir ao banco de novo
+            SalonService salonService = requestedServices.stream()
+                    .filter(s -> s.getId().equals(itemRequest.salonServiceId()))
+                    .findFirst()
+                    .orElseThrow(() -> new ObjectNotFoundException("Erro interno: Serviço não encontrado na lista pré-carregada."));
+
+            return AppointmentItem.builder()
+                    .appointment(finalAppointment)
+                    .service(salonService)
+                    .professional(professional)
+                    .price(itemRequest.price())
+                    .build();
+        }).toList();
+
+        appointment.setServices(appointmentItems);
+
         appointment = appointmentRepository.save(appointment);
-        return mapToDTO(appointment);
+        return AppointmentResponseDTO.fromEntity(appointment);
     }
 
     @Override
     @Transactional
     public AppointmentResponseDTO update(Long id, AppointmentRequestDTO request) {
-        Appointment appointment = appointmentRepository.findById(id)
-                .orElseThrow(() -> new ObjectNotFoundException("Appointment not found with id " + id));
+        // 1. BUSCA O AGENDAMENTO QUE JÁ EXISTE NO BANCO
+        Appointment appointmentToUpdate = appointmentRepository.findById(id)
+                .orElseThrow(() -> new ObjectNotFoundException("Agendamento não encontrado com ID: " + id));
 
-        if (request.clientId() != null) {
-            Client client = clientRepository.findById(request.clientId())
-                    .orElseThrow(() -> new ObjectNotFoundException("Client not found with id " + request.clientId()));
-            appointment.setClient(client);
-        }
-        if (request.appointmentDate() != null) {
-            appointment.setAppointmentDate(request.appointmentDate());
-        }
-        if (request.observations() != null) {
-            appointment.setObservations(request.observations());
-        }
-        if (request.status() != null) {
-            appointment.setStatus(request.status());
+        // --- LÓGICA DE VALIDAÇÃO DE CONFLITO  ---
+
+        // 2. Calcula os dados do horário solicitado na atualização
+        List<Long> serviceIds = request.items().stream().map(AppointmentItemRequestDTO::salonServiceId).toList();
+        List<SalonService> requestedServices = salonServiceRepository.findAllById(serviceIds);
+
+        if (requestedServices.size() != serviceIds.size()) {
+            throw new ObjectNotFoundException("Um ou mais serviços com os IDs fornecidos não foram encontrados.");
         }
 
-        appointment.getServices().clear(); // Remove os itens antigos da coleção gerenciada pelo Hibernate
+        int totalDurationInMinutes = requestedServices.stream().mapToInt(SalonService::getDurationInMinutes).sum();
+        LocalDateTime newAppointmentStartTime = request.appointmentDate();
+        LocalDateTime newAppointmentEndTime = newAppointmentStartTime.plusMinutes(totalDurationInMinutes);
 
-        if (request.items() != null && !request.items().isEmpty()) {
-            for (AppointmentItemRequestDTO itemRequest : request.items()) {
-                Professional professional = professionalRepository.findById(itemRequest.professionalId())
-                        .orElseThrow(() -> new ObjectNotFoundException("Professional not found with id " + itemRequest.professionalId()));
-                SalonService salonService = salonServiceRepository.findById(itemRequest.salonServiceId())
-                        .orElseThrow(() -> new ObjectNotFoundException("SalonService not found with id " + itemRequest.salonServiceId()));
+        // 3. Verifica o conflito para cada profissional
+        for (AppointmentItemRequestDTO item : request.items()) {
+            Long professionalId = item.professionalId();
+            LocalDateTime startOfDay = newAppointmentStartTime.toLocalDate().atStartOfDay();
+            LocalDateTime endOfDay = newAppointmentStartTime.toLocalDate().plusDays(1).atStartOfDay();
+            List<Appointment> existingAppointments = appointmentRepository.findPotentialConflicts(professionalId, startOfDay, endOfDay);
 
-                AppointmentItem appointmentItem = AppointmentItem.builder()
-                        .appointment(appointment)
-                        .service(salonService)
-                        .professional(professional)
-                        .price(itemRequest.price())
-                        .build();
-                appointment.getServices().add(appointmentItem);
+            for (Appointment existingAppointment : existingAppointments) {
+                // Se o agendamento encontrado for o mesmo que esta atualizando, pula a verificação
+                if (existingAppointment.getId().equals(id)) {
+                    continue;
+                }
+
+                int existingDuration = existingAppointment.getServices().stream().mapToInt(i -> i.getService().getDurationInMinutes()).sum();
+                LocalDateTime existingStartTime = existingAppointment.getAppointmentDate();
+                LocalDateTime existingEndTime = existingStartTime.plusMinutes(existingDuration);
+
+                if (newAppointmentStartTime.isBefore(existingEndTime) && newAppointmentEndTime.isAfter(existingStartTime)) {
+                    throw new BusinessRuleException("Conflito de horário: O profissional já tem um agendamento das " +
+                            existingStartTime.toLocalTime() + " às " + existingEndTime.toLocalTime());
+                }
             }
         }
-        appointment = appointmentRepository.save(appointment);
-        return mapToDTO(appointment);
+
+        // --- ATUALIZAÇÃO DA ENTIDADE ---
+        // Se passar pela validação, é atualizado o objeto que já buscou do banco
+
+        appointmentToUpdate.setAppointmentDate(request.appointmentDate());
+        appointmentToUpdate.setObservations(request.observations());
+        appointmentToUpdate.setStatus(request.status());
+        // O cliente também pode ser alterado
+        Client client = clientRepository.findById(request.clientId())
+                .orElseThrow(() -> new ObjectNotFoundException("Cliente não encontrado com id " + request.clientId()));
+        appointmentToUpdate.setClient(client);
+
+        // Limpa e Substituir - O Hibernate se encarrega de deletar os antigos e inserir os novos no banco
+        appointmentToUpdate.getServices().clear();
+
+        List<AppointmentItem> appointmentItems = request.items().stream().map(itemRequest -> {
+            Professional professional = professionalRepository.findById(itemRequest.professionalId())
+                    .orElseThrow(() -> new ObjectNotFoundException("Profissional não encontrado com id " + itemRequest.professionalId()));
+            SalonService salonService = requestedServices.stream()
+                    .filter(s -> s.getId().equals(itemRequest.salonServiceId()))
+                    .findFirst()
+                    .orElseThrow(() -> new ObjectNotFoundException("Erro interno: Serviço não encontrado na lista pré-carregada."));
+
+            return AppointmentItem.builder()
+                    .appointment(appointmentToUpdate)
+                    .service(salonService)
+                    .professional(professional)
+                    .price(itemRequest.price())
+                    .build();
+        }).toList();
+
+        appointmentToUpdate.getServices().addAll(appointmentItems);
+
+        Appointment updatedAppointment = appointmentRepository.save(appointmentToUpdate);
+
+        return AppointmentResponseDTO.fromEntity(updatedAppointment);
     }
 
     @Override
