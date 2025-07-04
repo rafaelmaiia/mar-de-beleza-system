@@ -2,17 +2,17 @@ package br.com.rafaelmaia.mar_de_beleza_system.services.impl;
 
 import br.com.rafaelmaia.mar_de_beleza_system.domain.entity.*;
 import br.com.rafaelmaia.mar_de_beleza_system.domain.enums.AppointmentStatus;
-import br.com.rafaelmaia.mar_de_beleza_system.dto.*;
+import br.com.rafaelmaia.mar_de_beleza_system.dto.AppointmentItemRequestDTO;
+import br.com.rafaelmaia.mar_de_beleza_system.dto.AppointmentRequestDTO;
+import br.com.rafaelmaia.mar_de_beleza_system.dto.AppointmentResponseDTO;
 import br.com.rafaelmaia.mar_de_beleza_system.repository.AppointmentRepository;
 import br.com.rafaelmaia.mar_de_beleza_system.repository.ClientRepository;
 import br.com.rafaelmaia.mar_de_beleza_system.repository.ProfessionalRepository;
-
 import br.com.rafaelmaia.mar_de_beleza_system.repository.SalonServiceRepository;
 import br.com.rafaelmaia.mar_de_beleza_system.repository.specification.AppointmentSpecification;
 import br.com.rafaelmaia.mar_de_beleza_system.services.AppointmentService;
 import br.com.rafaelmaia.mar_de_beleza_system.services.exceptions.ObjectNotFoundException;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -35,7 +35,7 @@ public class AppointmentServiceImpl implements AppointmentService {
     private final SalonServiceRepository salonServiceRepository;
 
     @Override
-    public AppointmentDTO findAppointmentById(Long id) {
+    public AppointmentResponseDTO findAppointmentById(Long id) {
         Appointment appointment = appointmentRepository.findById(id)
                 .orElseThrow(() -> new ObjectNotFoundException("Appointment not found with id " + id));
         return mapToDTO(appointment);
@@ -43,7 +43,7 @@ public class AppointmentServiceImpl implements AppointmentService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<AppointmentDTO> findAllAppointments(LocalDate date, Long professionalId, Long clientId) {
+    public List<AppointmentResponseDTO> findAllAppointments(LocalDate date, Long professionalId, Long clientId) {
         // Cria uma especificação combinando os filtros
         Specification<Appointment> spec = AppointmentSpecification.withFilters(date, professionalId, clientId);
 
@@ -55,30 +55,30 @@ public class AppointmentServiceImpl implements AppointmentService {
 
     @Override
     @Transactional
-    public AppointmentDTO create(AppointmentRequestDTO request) {
-        Client client = clientRepository.findById(request.getClientId())
-                .orElseThrow(() -> new ObjectNotFoundException("Client not found with id " + request.getClientId()));
+    public AppointmentResponseDTO create(AppointmentRequestDTO request) {
+        Client client = clientRepository.findById(request.clientId())
+                .orElseThrow(() -> new ObjectNotFoundException("Client not found with id " + request.clientId()));
 
         Appointment appointment = Appointment.builder()
                 .client(client)
-                .appointmentDate(request.getAppointmentDate())
-                .observations(request.getObservations())
-                .status(request.getStatus() != null ? request.getStatus() : AppointmentStatus.SCHEDULED)
+                .appointmentDate(request.appointmentDate())
+                .observations(request.observations())
+                .status(request.status() != null ? request.status() : AppointmentStatus.SCHEDULED)
                 .services(new ArrayList<>()) // Inicializa a lista de services do salão
                 .build();
 
-        if (request.getItems() != null && !request.getItems().isEmpty()) {
-            for (AppointmentItemRequestDTO itemRequest : request.getItems()) {
-                Professional professional = professionalRepository.findById(itemRequest.getProfessionalId())
-                        .orElseThrow(() -> new ObjectNotFoundException("Professional not found with id " + itemRequest.getProfessionalId()));
-                SalonService salonService = salonServiceRepository.findById(itemRequest.getSalonServiceId())
-                        .orElseThrow(() -> new ObjectNotFoundException("SalonService not found with id " + itemRequest.getSalonServiceId()));
+        if (request.items() != null && !request.items().isEmpty()) {
+            for (AppointmentItemRequestDTO itemRequest : request.items()) {
+                Professional professional = professionalRepository.findById(itemRequest.professionalId())
+                        .orElseThrow(() -> new ObjectNotFoundException("Professional not found with id " + itemRequest.professionalId()));
+                SalonService salonService = salonServiceRepository.findById(itemRequest.salonServiceId())
+                        .orElseThrow(() -> new ObjectNotFoundException("SalonService not found with id " + itemRequest.salonServiceId()));
 
                 AppointmentItem appointmentItem = AppointmentItem.builder()
                         .appointment(appointment)
                         .service(salonService)
                         .professional(professional)
-                        .price(itemRequest.getPrice())
+                        .price(itemRequest.price())
                         .build();
                 appointment.getServices().add(appointmentItem);
             }
@@ -89,39 +89,39 @@ public class AppointmentServiceImpl implements AppointmentService {
 
     @Override
     @Transactional
-    public AppointmentDTO update(Long id, AppointmentRequestDTO request) {
+    public AppointmentResponseDTO update(Long id, AppointmentRequestDTO request) {
         Appointment appointment = appointmentRepository.findById(id)
                 .orElseThrow(() -> new ObjectNotFoundException("Appointment not found with id " + id));
 
-        if (request.getClientId() != null) {
-            Client client = clientRepository.findById(request.getClientId())
-                    .orElseThrow(() -> new ObjectNotFoundException("Client not found with id " + request.getClientId()));
+        if (request.clientId() != null) {
+            Client client = clientRepository.findById(request.clientId())
+                    .orElseThrow(() -> new ObjectNotFoundException("Client not found with id " + request.clientId()));
             appointment.setClient(client);
         }
-        if (request.getAppointmentDate() != null) {
-            appointment.setAppointmentDate(request.getAppointmentDate());
+        if (request.appointmentDate() != null) {
+            appointment.setAppointmentDate(request.appointmentDate());
         }
-        if (request.getObservations() != null) {
-            appointment.setObservations(request.getObservations());
+        if (request.observations() != null) {
+            appointment.setObservations(request.observations());
         }
-        if (request.getStatus() != null) {
-            appointment.setStatus(request.getStatus());
+        if (request.status() != null) {
+            appointment.setStatus(request.status());
         }
 
         appointment.getServices().clear(); // Remove os itens antigos da coleção gerenciada pelo Hibernate
 
-        if (request.getItems() != null && !request.getItems().isEmpty()) {
-            for (AppointmentItemRequestDTO itemRequest : request.getItems()) {
-                Professional professional = professionalRepository.findById(itemRequest.getProfessionalId())
-                        .orElseThrow(() -> new ObjectNotFoundException("Professional not found with id " + itemRequest.getProfessionalId()));
-                SalonService salonService = salonServiceRepository.findById(itemRequest.getSalonServiceId())
-                        .orElseThrow(() -> new ObjectNotFoundException("SalonService not found with id " + itemRequest.getSalonServiceId()));
+        if (request.items() != null && !request.items().isEmpty()) {
+            for (AppointmentItemRequestDTO itemRequest : request.items()) {
+                Professional professional = professionalRepository.findById(itemRequest.professionalId())
+                        .orElseThrow(() -> new ObjectNotFoundException("Professional not found with id " + itemRequest.professionalId()));
+                SalonService salonService = salonServiceRepository.findById(itemRequest.salonServiceId())
+                        .orElseThrow(() -> new ObjectNotFoundException("SalonService not found with id " + itemRequest.salonServiceId()));
 
                 AppointmentItem appointmentItem = AppointmentItem.builder()
                         .appointment(appointment)
                         .service(salonService)
                         .professional(professional)
-                        .price(itemRequest.getPrice())
+                        .price(itemRequest.price())
                         .build();
                 appointment.getServices().add(appointmentItem);
             }
@@ -139,7 +139,7 @@ public class AppointmentServiceImpl implements AppointmentService {
         appointmentRepository.deleteById(id);
     }
 
-    private AppointmentDTO mapToDTO(Appointment appointment) {
-        return AppointmentDTO.fromEntity(appointment);
+    private AppointmentResponseDTO mapToDTO(Appointment appointment) {
+        return AppointmentResponseDTO.fromEntity(appointment);
     }
 }
