@@ -1,101 +1,76 @@
 package br.com.rafaelmaia.mar_de_beleza_system.controllers.docs;
 
-import br.com.rafaelmaia.mar_de_beleza_system.dto.ProfessionalDTO;
+import br.com.rafaelmaia.mar_de_beleza_system.dto.ProfessionalRequestDTO;
+import br.com.rafaelmaia.mar_de_beleza_system.dto.ProfessionalResponseDTO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
 
 import java.util.List;
 
 public interface ProfessionalControllerDocs {
-    String ID = "/{id}";
 
-    @Operation(summary = "Find a Professional",
+    @Operation(summary = "Find a Professional by ID",
             description = "Find a specific Professional by their ID",
             tags = {"Professional"},
             responses = {
-                    @ApiResponse(
-                            description = "Success",
-                            responseCode = "200",
-                            content = @Content(schema = @Schema(implementation = ProfessionalDTO.class))),
-                    @ApiResponse(description = "No Content", responseCode = "204", content = @Content),
-                    @ApiResponse(description = "Bad Request", responseCode = "400", content = @Content),
-                    @ApiResponse(description = "Unauthorized", responseCode = "401", content = @Content),
+                    @ApiResponse(description = "Success", responseCode = "200", content = @Content(schema = @Schema(implementation = ProfessionalResponseDTO.class))),
                     @ApiResponse(description = "Not Found", responseCode = "404", content = @Content),
-                    @ApiResponse(description = "Internal Server Error", responseCode = "500", content = @Content)
+                    @ApiResponse(description = "Unauthorized", responseCode = "401", content = @Content)
             }
     )
-    ResponseEntity<ProfessionalDTO> findProfessionalById(@PathVariable Long id);
+    ResponseEntity<ProfessionalResponseDTO> findById(@PathVariable Long id);
 
     @Operation(summary = "Find All Professionals",
             description = "Find All Professionals",
             tags = {"Professional"},
             responses = {
-                    @ApiResponse(
-                            description = "Success",
-                            responseCode = "200",
-                            content = {
-                                    @Content(
-                                            mediaType = "application/json",
-                                            array = @ArraySchema(schema = @Schema(implementation = ProfessionalDTO.class))
-                                    )
-                            }),
-                    @ApiResponse(description = "No Content", responseCode = "204", content = @Content),
-                    @ApiResponse(description = "Bad Request", responseCode = "400", content = @Content),
-                    @ApiResponse(description = "Unauthorized", responseCode = "401", content = @Content),
-                    @ApiResponse(description = "Not Found", responseCode = "404", content = @Content),
-                    @ApiResponse(description = "Internal Server Error", responseCode = "500", content = @Content)
+                    @ApiResponse(description = "Success", responseCode = "200", content = @Content(array = @ArraySchema(schema = @Schema(implementation = ProfessionalResponseDTO.class)))),
+                    @ApiResponse(description = "Unauthorized", responseCode = "401", content = @Content)
             }
     )
-    ResponseEntity<List<ProfessionalDTO>> findAllProfessionals();
+    ResponseEntity<List<ProfessionalResponseDTO>> findAll();
 
     @Operation(summary = "Adds a new Professional",
-            description = "Adds a new Professional by passing in a JSON representation of the Professional.",
+            description = "Adds a new Professional. Only accessible by ADMIN users.",
             tags = {"Professional"},
             responses = {
-                    @ApiResponse(
-                            description = "Success",
-                            responseCode = "200",
-                            content = @Content(schema = @Schema(implementation = ProfessionalDTO.class))
-                    ),
-                    @ApiResponse(description = "Bad Request", responseCode = "400", content = @Content),
+                    @ApiResponse(description = "Created", responseCode = "201", content = @Content(schema = @Schema(implementation = ProfessionalResponseDTO.class))),
+                    @ApiResponse(description = "Bad Request (Validation Error)", responseCode = "400", content = @Content),
                     @ApiResponse(description = "Unauthorized", responseCode = "401", content = @Content),
-                    @ApiResponse(description = "Internal Server Error", responseCode = "500", content = @Content)
+                    @ApiResponse(description = "Forbidden", responseCode = "403", content = @Content)
             }
     )
-    ResponseEntity<ProfessionalDTO> createProfessional(@RequestBody ProfessionalDTO obj);
+    ResponseEntity<ProfessionalResponseDTO> create(@RequestBody @Valid ProfessionalRequestDTO requestDTO);
 
     @Operation(summary = "Updates a Professional's information",
-            description = "Updates a Professional's information by passing in a JSON representation of the updated Professional.",
+            description = "Updates a Professional's information. Only accessible by ADMIN users.",
             tags = {"Professional"},
             responses = {
-                    @ApiResponse(
-                            description = "Success",
-                            responseCode = "200",
-                            content = @Content(schema = @Schema(implementation = ProfessionalDTO.class))),
-                    @ApiResponse(description = "No Content", responseCode = "204", content = @Content),
-                    @ApiResponse(description = "Bad Request", responseCode = "400", content = @Content),
+                    @ApiResponse(description = "Success", responseCode = "200", content = @Content(schema = @Schema(implementation = ProfessionalResponseDTO.class))),
+                    @ApiResponse(description = "Bad Request (Validation Error)", responseCode = "400", content = @Content),
                     @ApiResponse(description = "Unauthorized", responseCode = "401", content = @Content),
-                    @ApiResponse(description = "Not Found", responseCode = "404", content = @Content),
-                    @ApiResponse(description = "Internal Server Error", responseCode = "500", content = @Content)
+                    @ApiResponse(description = "Forbidden", responseCode = "403", content = @Content),
+                    @ApiResponse(description = "Not Found", responseCode = "404", content = @Content)
             }
     )
-    ResponseEntity<ProfessionalDTO> updateProfessional(@PathVariable Long id, @RequestBody ProfessionalDTO obj);
+    ResponseEntity<ProfessionalResponseDTO> update(@PathVariable Long id, @RequestBody @Valid ProfessionalRequestDTO requestDTO);
 
     @Operation(summary = "Deletes a Professional",
-            description = "Deletes a specific Professional by their ID",
+            description = "Deletes a specific Professional by their ID. Only accessible by ADMIN users.",
             tags = {"Professional"},
             responses = {
                     @ApiResponse(description = "No Content", responseCode = "204", content = @Content),
-                    @ApiResponse(description = "Bad Request", responseCode = "400", content = @Content),
                     @ApiResponse(description = "Unauthorized", responseCode = "401", content = @Content),
-                    @ApiResponse(description = "Not Found", responseCode = "404", content = @Content),
-                    @ApiResponse(description = "Internal Server Error", responseCode = "500", content = @Content)
+                    @ApiResponse(description = "Forbidden", responseCode = "403", content = @Content),
+                    @ApiResponse(description = "Not Found", responseCode = "404", content = @Content)
             }
     )
-    ResponseEntity<ProfessionalDTO> deleteProfessional(@PathVariable Long id);
+    ResponseEntity<Void> delete(@PathVariable Long id);
 }

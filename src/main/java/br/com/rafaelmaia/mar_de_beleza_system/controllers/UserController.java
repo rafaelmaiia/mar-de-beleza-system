@@ -5,12 +5,16 @@ import br.com.rafaelmaia.mar_de_beleza_system.domain.enums.Role;
 import br.com.rafaelmaia.mar_de_beleza_system.dto.RegisterRequest;
 import br.com.rafaelmaia.mar_de_beleza_system.repository.AppUserRepository;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/v1/users")
@@ -23,7 +27,7 @@ public class UserController {
 
     @PostMapping
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
-    public ResponseEntity<String> createUser(@RequestBody RegisterRequest request) {
+    public ResponseEntity<String> createUser(@RequestBody @Valid RegisterRequest request) {
         // Verificação se o email já existe
         if (appUserRepository.findByEmail(request.email()).isPresent()) {
             return ResponseEntity.badRequest().body("Erro: Email já está em uso.");

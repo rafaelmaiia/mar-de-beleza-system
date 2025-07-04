@@ -1,12 +1,14 @@
 package br.com.rafaelmaia.mar_de_beleza_system.controllers;
 
 import br.com.rafaelmaia.mar_de_beleza_system.controllers.docs.ProfessionalControllerDocs;
-import br.com.rafaelmaia.mar_de_beleza_system.dto.ProfessionalDTO;
+import br.com.rafaelmaia.mar_de_beleza_system.dto.ProfessionalRequestDTO;
+import br.com.rafaelmaia.mar_de_beleza_system.dto.ProfessionalResponseDTO;
 import br.com.rafaelmaia.mar_de_beleza_system.services.ProfessionalService;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.modelmapper.ModelMapper;
-import org.springframework.beans.factory.annotation.Autowired;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
@@ -15,50 +17,45 @@ import java.util.List;
 
 @RestController
 @RequestMapping(value = "/api/v1/professionals")
+@RequiredArgsConstructor
 @Tag(name = "Professional", description = "Endpoints for Managing Professionals")
 public class ProfessionalController implements ProfessionalControllerDocs {
 
-    @Autowired
-    private ModelMapper mapper;
+    private final ProfessionalService service;
 
-    @Autowired
-    private ProfessionalService service;
-
-    @GetMapping(value = ID)
+    @GetMapping("/{id}")
     @Override
-    public ResponseEntity<ProfessionalDTO> findProfessionalById(@PathVariable Long id) {
-
-        return ResponseEntity.ok().body(mapper.map(service.findProfessionalById(id), ProfessionalDTO.class));
+    public ResponseEntity<ProfessionalResponseDTO> findById(@PathVariable Long id) {
+        return ResponseEntity.ok(service.findProfessionalById(id));
     }
 
     @GetMapping
     @Override
-    public ResponseEntity<List<ProfessionalDTO>> findAllProfessionals() {
-
-        return ResponseEntity.ok().body(
-                service.findAllProfessionals().stream().map(client -> mapper.map(client, ProfessionalDTO.class)).toList()
-        );
+    public ResponseEntity<List<ProfessionalResponseDTO>> findAll() {
+        return ResponseEntity.ok(service.findAllProfessionals());
     }
 
     @PostMapping
     @Override
-    public ResponseEntity<ProfessionalDTO> createProfessional(@RequestBody ProfessionalDTO obj) {
-        URI uri = ServletUriComponentsBuilder.
-                fromCurrentRequest().path(ID).buildAndExpand(service.createProfessional(obj).getId()).toUri();
-
-        return ResponseEntity.created(uri).build();
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    public ResponseEntity<ProfessionalResponseDTO> create(@RequestBody @Valid ProfessionalRequestDTO requestDTO) {
+        ProfessionalResponseDTO newDto = service.createProfessional(requestDTO);
+        URI uri = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}")
+                .buildAndExpand(newDto.id()).toUri();
+        return ResponseEntity.created(uri).body(newDto);
     }
 
-    @PutMapping(value = ID)
+    @PutMapping("/{id}")
     @Override
-    public ResponseEntity<ProfessionalDTO> updateProfessional(@PathVariable Long id, @RequestBody ProfessionalDTO obj) {
-        obj.setId(id);
-        return ResponseEntity.ok().body(mapper.map(service.updateProfessional(obj), ProfessionalDTO.class));
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    public ResponseEntity<ProfessionalResponseDTO> update(@PathVariable Long id, @RequestBody @Valid ProfessionalRequestDTO requestDTO) {
+        return ResponseEntity.ok(service.updateProfessional(id, requestDTO));
     }
 
-    @DeleteMapping(value = ID)
+    @DeleteMapping("/{id}")
     @Override
-    public ResponseEntity<ProfessionalDTO> deleteProfessional(@PathVariable Long id) {
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
         service.deleteProfessional(id);
         return ResponseEntity.noContent().build();
     }
