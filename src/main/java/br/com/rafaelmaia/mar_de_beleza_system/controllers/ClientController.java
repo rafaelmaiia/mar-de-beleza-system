@@ -1,11 +1,12 @@
 package br.com.rafaelmaia.mar_de_beleza_system.controllers;
 
 import br.com.rafaelmaia.mar_de_beleza_system.controllers.docs.ClientControllerDocs;
-import br.com.rafaelmaia.mar_de_beleza_system.dto.ClientDTO;
+import br.com.rafaelmaia.mar_de_beleza_system.dto.ClientRequestDTO;
+import br.com.rafaelmaia.mar_de_beleza_system.dto.ClientResponseDTO;
 import br.com.rafaelmaia.mar_de_beleza_system.services.ClientService;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.modelmapper.ModelMapper;
-import org.springframework.beans.factory.annotation.Autowired;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
@@ -15,50 +16,49 @@ import java.util.List;
 
 @RestController
 @RequestMapping(value = "/api/v1/clients")
+@RequiredArgsConstructor
 @Tag(name = "Client", description = "Endpoints for Managing Clients")
 public class ClientController implements ClientControllerDocs {
 
-    @Autowired
-    private ModelMapper mapper;
+    private final ClientService service;
 
-    @Autowired
-    private ClientService service;
-
-    @GetMapping(value = ID)
+    @GetMapping("/{id}")
     @Override
-    public ResponseEntity<ClientDTO> findClientById(@PathVariable Long id) {
+    public ResponseEntity<ClientResponseDTO> findById(@PathVariable Long id) {
 
-        return ResponseEntity.ok().body(mapper.map(service.findClientById(id), ClientDTO.class));
+        return ResponseEntity.ok().body(service.findClientById(id));
     }
 
     @GetMapping
     @Override
-    public ResponseEntity<List<ClientDTO>> findAllClients() {
+    public ResponseEntity<List<ClientResponseDTO>> findAll() {
 
-        return ResponseEntity.ok().body(
-                service.findAllClients().stream().map(client -> mapper.map(client, ClientDTO.class)).toList()
-        );
+        return ResponseEntity.ok().body(service.findAllClients());
     }
 
     @PostMapping
     @Override
-    public ResponseEntity<ClientDTO> createClient(@RequestBody ClientDTO obj) {
-        URI uri = ServletUriComponentsBuilder.
-                fromCurrentRequest().path(ID).buildAndExpand(service.createClient(obj).getId()).toUri();
+    public ResponseEntity<ClientResponseDTO> create(@RequestBody @Valid ClientRequestDTO requestDTO) {
+        ClientResponseDTO newClientDTO = service.createClient(requestDTO);
 
-        return ResponseEntity.created(uri).build();
+        URI uri = ServletUriComponentsBuilder.fromCurrentRequest()
+                .path("/{id}")
+                .buildAndExpand(newClientDTO.id())
+                .toUri();
+
+        return ResponseEntity.created(uri).body(newClientDTO);
     }
 
-    @PutMapping(value = ID)
+    @PutMapping("/{id}")
     @Override
-    public ResponseEntity<ClientDTO> updateClient(@PathVariable Long id, @RequestBody ClientDTO obj) {
-        obj.setId(id);
-        return ResponseEntity.ok().body(mapper.map(service.updateClient(obj), ClientDTO.class));
+    public ResponseEntity<ClientResponseDTO> update(@PathVariable Long id, @RequestBody @Valid ClientRequestDTO requestDTO) {
+        ClientResponseDTO updatedDto = service.updateClient(id, requestDTO);
+        return ResponseEntity.ok().body(updatedDto);
     }
 
-    @DeleteMapping(value = ID)
+    @DeleteMapping("/{id}")
     @Override
-    public ResponseEntity<?> deleteClient(@PathVariable("id") Long id) {
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
         service.deleteClient(id);
         return ResponseEntity.noContent().build();
     }

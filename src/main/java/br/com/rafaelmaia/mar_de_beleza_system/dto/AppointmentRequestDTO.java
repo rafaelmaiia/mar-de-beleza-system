@@ -1,29 +1,27 @@
 package br.com.rafaelmaia.mar_de_beleza_system.dto;
 
 import br.com.rafaelmaia.mar_de_beleza_system.domain.enums.AppointmentStatus;
-import br.com.rafaelmaia.mar_de_beleza_system.domain.enums.ServiceType;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.FutureOrPresent;
+import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
-import lombok.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
-public class AppointmentRequestDTO {
+public record AppointmentRequestDTO(
+        @NotNull(message = "O ID do cliente não pode ser nulo")
+        Long clientId,
 
-    @NotNull
-    private Long clientId; // Apenas o ID do cliente
+        @NotNull(message = "A data do agendamento não pode ser nula")
+        @FutureOrPresent(message = "A data do agendamento não pode ser no passado")
+        LocalDateTime appointmentDate,
 
-    @NotNull
-    private List<AppointmentItemRequestDTO> items;
+        String observations,
 
-    @NotNull
-    private LocalDateTime appointmentDate; // Data do agendamento
+        AppointmentStatus status,
 
-    private AppointmentStatus status; // Status do agendamento
-    private String observations; // Observações
-}
+        @NotEmpty(message = "A lista de serviços não pode ser vazia")
+        @Valid
+        List<AppointmentItemRequestDTO> items
+) {}

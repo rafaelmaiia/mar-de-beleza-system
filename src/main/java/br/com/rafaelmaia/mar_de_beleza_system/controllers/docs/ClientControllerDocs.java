@@ -1,101 +1,54 @@
 package br.com.rafaelmaia.mar_de_beleza_system.controllers.docs;
 
-import br.com.rafaelmaia.mar_de_beleza_system.dto.ClientDTO;
+import br.com.rafaelmaia.mar_de_beleza_system.dto.ClientRequestDTO;
+import br.com.rafaelmaia.mar_de_beleza_system.dto.ClientResponseDTO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
 
 import java.util.List;
 
 public interface ClientControllerDocs {
-    String ID = "/{id}";
 
-    @Operation(summary = "Find a Client",
-            description = "Find a specific client by their ID",
-            tags = {"Client"},
-            responses = {
-                    @ApiResponse(
-                            description = "Success",
-                            responseCode = "200",
-                            content = @Content(schema = @Schema(implementation = ClientDTO.class))),
-                    @ApiResponse(description = "No Content", responseCode = "204", content = @Content),
-                    @ApiResponse(description = "Bad Request", responseCode = "400", content = @Content),
-                    @ApiResponse(description = "Unauthorized", responseCode = "401", content = @Content),
-                    @ApiResponse(description = "Not Found", responseCode = "404", content = @Content),
-                    @ApiResponse(description = "Internal Server Error", responseCode = "500", content = @Content)
-            }
-    )
-    ResponseEntity<ClientDTO> findClientById(@PathVariable Long id);
+    @Operation(summary = "Find a Client by ID", tags = {"Client"}, responses = {
+            @ApiResponse(description = "Success", responseCode = "200", content = @Content(schema = @Schema(implementation = ClientResponseDTO.class))),
+            @ApiResponse(description = "Not Found", responseCode = "404", content = @Content),
+            @ApiResponse(description = "Unauthorized", responseCode = "401", content = @Content)
+    })
+    ResponseEntity<ClientResponseDTO> findById(@PathVariable Long id);
 
-    @Operation(summary = "Find All Clients",
-            description = "Find All Clients",
-            tags = {"Client"},
-            responses = {
-                    @ApiResponse(
-                            description = "Success",
-                            responseCode = "200",
-                            content = {
-                                    @Content(
-                                            mediaType = "application/json",
-                                            array = @ArraySchema(schema = @Schema(implementation = ClientDTO.class))
-                                    )
-                            }),
-                    @ApiResponse(description = "No Content", responseCode = "204", content = @Content),
-                    @ApiResponse(description = "Bad Request", responseCode = "400", content = @Content),
-                    @ApiResponse(description = "Unauthorized", responseCode = "401", content = @Content),
-                    @ApiResponse(description = "Not Found", responseCode = "404", content = @Content),
-                    @ApiResponse(description = "Internal Server Error", responseCode = "500", content = @Content)
-            }
-    )
-    ResponseEntity<List<ClientDTO>> findAllClients();
+    @Operation(summary = "Find all Clients", tags = {"Client"}, responses = {
+            @ApiResponse(description = "Success", responseCode = "200", content = @Content(array = @ArraySchema(schema = @Schema(implementation = ClientResponseDTO.class)))),
+            @ApiResponse(description = "Unauthorized", responseCode = "401", content = @Content)
+    })
+    ResponseEntity<List<ClientResponseDTO>> findAll();
 
-    @Operation(summary = "Adds a new Client",
-            description = "Adds a new client by passing in a JSON representation of the client.",
-            tags = {"Client"},
-            responses = {
-                    @ApiResponse(
-                            description = "Success",
-                            responseCode = "200",
-                            content = @Content(schema = @Schema(implementation = ClientDTO.class))
-                    ),
-                    @ApiResponse(description = "Bad Request", responseCode = "400", content = @Content),
-                    @ApiResponse(description = "Unauthorized", responseCode = "401", content = @Content),
-                    @ApiResponse(description = "Internal Server Error", responseCode = "500", content = @Content)
-            }
-    )
-    ResponseEntity<ClientDTO> createClient(@RequestBody ClientDTO obj);
+    @Operation(summary = "Adds a new Client", tags = {"Client"}, responses = {
+            @ApiResponse(description = "Created", responseCode = "201", content = @Content(schema = @Schema(implementation = ClientResponseDTO.class))),
+            @ApiResponse(description = "Bad Request (Validation Error)", responseCode = "400", content = @Content),
+            @ApiResponse(description = "Unauthorized", responseCode = "401", content = @Content)
+    })
+    ResponseEntity<ClientResponseDTO> create(@RequestBody @Valid ClientRequestDTO requestDTO);
 
-    @Operation(summary = "Updates a client's information",
-            description = "Updates a client's information by passing in a JSON representation of the updated client.",
-            tags = {"Client"},
-            responses = {
-                    @ApiResponse(
-                            description = "Success",
-                            responseCode = "200",
-                            content = @Content(schema = @Schema(implementation = ClientDTO.class))),
-                    @ApiResponse(description = "No Content", responseCode = "204", content = @Content),
-                    @ApiResponse(description = "Bad Request", responseCode = "400", content = @Content),
-                    @ApiResponse(description = "Unauthorized", responseCode = "401", content = @Content),
-                    @ApiResponse(description = "Not Found", responseCode = "404", content = @Content),
-                    @ApiResponse(description = "Internal Server Error", responseCode = "500", content = @Content)
-            }
-    )
-    ResponseEntity<ClientDTO> updateClient(@PathVariable Long id, @RequestBody ClientDTO obj);
+    @Operation(summary = "Updates a Client's information", tags = {"Client"}, responses = {
+            @ApiResponse(description = "Success", responseCode = "200", content = @Content(schema = @Schema(implementation = ClientResponseDTO.class))),
+            @ApiResponse(description = "Bad Request (Validation Error)", responseCode = "400", content = @Content),
+            @ApiResponse(description = "Unauthorized", responseCode = "401", content = @Content),
+            @ApiResponse(description = "Not Found", responseCode = "404", content = @Content)
+    })
+    ResponseEntity<ClientResponseDTO> update(@PathVariable Long id, @RequestBody @Valid ClientRequestDTO requestDTO);
 
-    @Operation(summary = "Deletes a Client",
-            description = "Deletes a specific client by their ID",
-            tags = {"Client"},
-            responses = {
-                    @ApiResponse(description = "No Content", responseCode = "204", content = @Content),
-                    @ApiResponse(description = "Bad Request", responseCode = "400", content = @Content),
-                    @ApiResponse(description = "Unauthorized", responseCode = "401", content = @Content),
-                    @ApiResponse(description = "Not Found", responseCode = "404", content = @Content),
-                    @ApiResponse(description = "Internal Server Error", responseCode = "500", content = @Content)
-            }
-    )
-    ResponseEntity<?> deleteClient(@PathVariable("id") Long id);
+    @Operation(summary = "Deletes a Client", description = "Deletes a specific Client by their ID. May be restricted to ADMIN users.", tags = {"Client"}, responses = {
+            @ApiResponse(description = "No Content", responseCode = "204", content = @Content),
+            @ApiResponse(description = "Unauthorized", responseCode = "401", content = @Content),
+            @ApiResponse(description = "Forbidden", responseCode = "403", content = @Content),
+            @ApiResponse(description = "Not Found", responseCode = "404", content = @Content)
+    })
+    ResponseEntity<Void> delete(@PathVariable Long id);
 }
