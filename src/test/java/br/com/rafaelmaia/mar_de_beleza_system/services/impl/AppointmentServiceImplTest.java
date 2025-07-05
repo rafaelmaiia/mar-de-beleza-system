@@ -52,8 +52,7 @@ class AppointmentServiceImplTest {
 
     @BeforeEach
     void setup() {
-        // Padrão Arrange-Act-Assert / Given-When-Then
-        // Arrange - criado os dados necessários para teste
+        // Arrange: cria os dados de teste com base no padrão AAA (Arrange-Act-Assert)
         client = new Client();
         client.setId(1L);
         client.setName("Cliente Teste");
@@ -126,7 +125,7 @@ class AppointmentServiceImplTest {
             .isInstanceOf(BusinessRuleException.class)
             .hasMessageContaining("Conflito de horário");
 
-        // Verificando que o metodo save NUNCA foi chamado, e provando que o fluxo foi interrompido
+        // Garante que o fluxo foi interrompido e nenhum agendamento foi salvo
         verify(appointmentRepository, never()).save(any(Appointment.class));
     }
 
@@ -134,7 +133,7 @@ class AppointmentServiceImplTest {
     void givenValidChanges_whenUpdateAppointment_thenShouldReturnUpdatedAppointment() {
         // Given
 
-        // O 'willAnswer' retornará uma cópia do objeto para simular como o JPA funciona
+        // Simula o comportamento do JPA retornando uma entidade existente
         given(appointmentRepository.findById(anyLong())).willAnswer(invocation -> {
             Appointment originalAppointment = new Appointment();
             originalAppointment.setId(10L); // ID fixo para o teste
@@ -148,16 +147,9 @@ class AppointmentServiceImplTest {
             return Optional.of(originalAppointment);
         });
 
-        // O mock vai encontrar o serviço do requestDTO
         given(salonServiceRepository.findAllById(any())).willReturn(List.of(salonService));
-
-        // O repositório de CLIENT vai encontrar o cliente
         given(clientRepository.findById(client.getId())).willReturn(Optional.of(client));
-
-        // O repositório de PROFESSIONAL vai encontrar o professional
         given(professionalRepository.findById(professional.getId())).willReturn(Optional.of(professional));
-
-        // O repositório não vai encontrar NENHUM conflito de horário
         given(appointmentRepository.findPotentialConflicts(any(), any(), any())).willReturn(Collections.emptyList());
 
         // O repositório salva e retorna o agendamento modificado
@@ -190,7 +182,7 @@ class AppointmentServiceImplTest {
     void givenConflictWithAnotherAppointment_whenUpdateAppointment_thenShouldThrowBusinessRuleException() {
         // Given
 
-        // O agendamento que queremos ATUALIZAR (ID 10)
+        // Agendamento alvo da atualização (ID 10)
         Appointment appointmentToUpdate = new Appointment();
         appointmentToUpdate.setId(10L);
         appointmentToUpdate.setAppointmentDate(LocalDateTime.of(2025, 7, 8, 10, 0));
@@ -222,7 +214,7 @@ class AppointmentServiceImplTest {
         );
 
         // When & Then
-        // Verificando se a exceção correta é lançada
+        // Garante que a exceção de conflito de horário é lançada corretamente
         assertThatThrownBy(() -> appointmentService.update(10L, updateRequestWithConflict))
                 .isInstanceOf(BusinessRuleException.class)
                 .hasMessageContaining("Conflito de horário");
