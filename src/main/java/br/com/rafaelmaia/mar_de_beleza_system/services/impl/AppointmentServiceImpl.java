@@ -14,6 +14,8 @@ import br.com.rafaelmaia.mar_de_beleza_system.services.AppointmentService;
 import br.com.rafaelmaia.mar_de_beleza_system.services.exceptions.BusinessRuleException;
 import br.com.rafaelmaia.mar_de_beleza_system.services.exceptions.ObjectNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -46,22 +48,21 @@ public class AppointmentServiceImpl implements AppointmentService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<AppointmentResponseDTO> findAllAppointments(LocalDate date, Long professionalId, Long clientId) {
-        // Cria uma especificação combinando os filtros
+    public Page<AppointmentResponseDTO> findAllAppointments(LocalDate date, Long professionalId, Long clientId, Pageable pageable) {
+        // Aplica filtros dinâmicos por data, cliente e profissional
         Specification<Appointment> spec = AppointmentSpecification.withFilters(date, professionalId, clientId);
 
-        // Usa o novo metodo findAll(spec) que veio do JpaSpecificationExecutor
-        return appointmentRepository.findAll(spec).stream()
-                .map(this::mapToDTO)
-                .collect(Collectors.toList());
+        Page<Appointment> appointmentPage = appointmentRepository.findAll(spec, pageable);
+
+        return appointmentPage.map(AppointmentResponseDTO::fromEntity);
     }
 
     @Override
     @Transactional
     public AppointmentResponseDTO create(AppointmentRequestDTO request) {
-        // --- LÓGICA DE VALIDAÇÃO DE CONFLITO ---
+        // Validação de conflitos com agendamentos existentes
 
-        // 1. Buscar as entidades de serviço para obter as durações
+        // Carrega os serviços para obter duração total e validar existência
         List<Long> serviceIds = request.items().stream()
                 .map(AppointmentItemRequestDTO::salonServiceId).toList();
         List<SalonService> requestedServices = salonServiceRepository.findAllById(serviceIds);
@@ -71,12 +72,12 @@ public class AppointmentServiceImpl implements AppointmentService {
             throw new ObjectNotFoundException("Um ou mais serviços não foram encontrados.");
         }
 
-        // 2. Calcule o horário de início e término do NOVO agendamento
+        // Calcula início e término do novo agendamento
         int totalDurationInMinutes = requestedServices.stream().mapToInt(SalonService::getDurationInMinutes).sum();
         LocalDateTime newAppointmentStartTime = request.appointmentDate();
         LocalDateTime newAppointmentEndTime = newAppointmentStartTime.plusMinutes(totalDurationInMinutes);
 
-        // 3. Verifica o conflito para cada profissional no novo agendamento
+        // Verifica se algum profissional já está ocupado nesse horário
         for (AppointmentItemRequestDTO item : request.items()) {
             Long professionalId = item.professionalId();
 
@@ -99,8 +100,7 @@ public class AppointmentServiceImpl implements AppointmentService {
             }
         }
 
-        // --- LÓGICA DE CRIAÇÃO DA ENTIDADE ---
-        // Se passou por todas as validações, o metodo continua com a criação
+        // Criação do agendamento após passar nas validações
 
         Client client = clientRepository.findById(request.clientId())
                 .orElseThrow(() -> new ObjectNotFoundException("Cliente não encontrado com id " + request.clientId()));
@@ -114,15 +114,14 @@ public class AppointmentServiceImpl implements AppointmentService {
                 .services(new ArrayList<>())
                 .build();
 
-        // Criado uma referencia final (que não pode ser alterada) para ser usada na lambda
         final Appointment finalAppointment = appointment;
 
-        // Mapeiando os DTOs de item para Entidades de item
+        // Mapeia os itens do agendamento (profissional + serviço + preço)
         List<AppointmentItem> appointmentItems = request.items().stream().map(itemRequest -> {
             Professional professional = professionalRepository.findById(itemRequest.professionalId())
                     .orElseThrow(() -> new ObjectNotFoundException("Profissional não encontrado com id " + itemRequest.professionalId()));
 
-            // Reutilizando os serviços já buscados para evitar ir ao banco de novo
+            // Reutiliza a lista carregada para evitar nova consulta ao banco
             SalonService salonService = requestedServices.stream()
                     .filter(s -> s.getId().equals(itemRequest.salonServiceId()))
                     .findFirst()
@@ -145,13 +144,12 @@ public class AppointmentServiceImpl implements AppointmentService {
     @Override
     @Transactional
     public AppointmentResponseDTO update(Long id, AppointmentRequestDTO request) {
-        // 1. BUSCA O AGENDAMENTO QUE JÁ EXISTE NO BANCO
+        // Busca o agendamento que já existe no banco
         Appointment appointmentToUpdate = appointmentRepository.findById(id)
                 .orElseThrow(() -> new ObjectNotFoundException("Agendamento não encontrado com ID: " + id));
 
-        // --- LÓGICA DE VALIDAÇÃO DE CONFLITO  ---
-
-        // 2. Calcula os dados do horário solicitado na atualização
+        // Validação de conflitos para atualização
+        // Calcula os dados do horário solicitado na atualização
         List<Long> serviceIds = request.items().stream().map(AppointmentItemRequestDTO::salonServiceId).toList();
         List<SalonService> requestedServices = salonServiceRepository.findAllById(serviceIds);
 
@@ -163,7 +161,7 @@ public class AppointmentServiceImpl implements AppointmentService {
         LocalDateTime newAppointmentStartTime = request.appointmentDate();
         LocalDateTime newAppointmentEndTime = newAppointmentStartTime.plusMinutes(totalDurationInMinutes);
 
-        // 3. Verifica o conflito para cada profissional
+        // Verifica o conflito para cada profissional
         for (AppointmentItemRequestDTO item : request.items()) {
             Long professionalId = item.professionalId();
             LocalDateTime startOfDay = newAppointmentStartTime.toLocalDate().atStartOfDay();
@@ -171,7 +169,7 @@ public class AppointmentServiceImpl implements AppointmentService {
             List<Appointment> existingAppointments = appointmentRepository.findPotentialConflicts(professionalId, startOfDay, endOfDay);
 
             for (Appointment existingAppointment : existingAppointments) {
-                // Se o agendamento encontrado for o mesmo que esta atualizando, pula a verificação
+                // Ignora o próprio agendamento para evitar falso positivo
                 if (existingAppointment.getId().equals(id)) {
                     continue;
                 }
@@ -187,18 +185,17 @@ public class AppointmentServiceImpl implements AppointmentService {
             }
         }
 
-        // --- ATUALIZAÇÃO DA ENTIDADE ---
-        // Se passar pela validação, é atualizado o objeto que já buscou do banco
-
+        // Atualiza os dados do agendamento após validações
         appointmentToUpdate.setAppointmentDate(request.appointmentDate());
         appointmentToUpdate.setObservations(request.observations());
         appointmentToUpdate.setStatus(request.status());
-        // O cliente também pode ser alterado
+
+        // Permite alterar o cliente vinculado ao agendamento
         Client client = clientRepository.findById(request.clientId())
                 .orElseThrow(() -> new ObjectNotFoundException("Cliente não encontrado com id " + request.clientId()));
         appointmentToUpdate.setClient(client);
 
-        // Limpa e Substituir - O Hibernate se encarrega de deletar os antigos e inserir os novos no banco
+        // Limpa e Substitui - O Hibernate se encarrega de deletar os antigos e inserir os novos no banco
         appointmentToUpdate.getServices().clear();
 
         List<AppointmentItem> appointmentItems = request.items().stream().map(itemRequest -> {

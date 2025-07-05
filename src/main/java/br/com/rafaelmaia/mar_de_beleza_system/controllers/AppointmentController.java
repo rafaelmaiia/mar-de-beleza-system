@@ -7,6 +7,8 @@ import br.com.rafaelmaia.mar_de_beleza_system.services.AppointmentService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -34,11 +36,12 @@ public class AppointmentController implements AppointmentControllerDocs {
 
     @GetMapping
     @Override
-    public ResponseEntity<List<AppointmentResponseDTO>> findAll(
+    public ResponseEntity<Page<AppointmentResponseDTO>> findAll(
             @RequestParam(value = "date", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)LocalDate date,
             @RequestParam(value = "professionalId", required = false) Long professionalId,
-            @RequestParam(value = "clientId", required = false) Long clientId) {
-        return ResponseEntity.ok(appointmentService.findAllAppointments(date, professionalId, clientId));
+            @RequestParam(value = "clientId", required = false) Long clientId,
+            Pageable pageable) {
+        return ResponseEntity.ok(appointmentService.findAllAppointments(date, professionalId, clientId, pageable));
     }
 
     @GetMapping("/{id}")
