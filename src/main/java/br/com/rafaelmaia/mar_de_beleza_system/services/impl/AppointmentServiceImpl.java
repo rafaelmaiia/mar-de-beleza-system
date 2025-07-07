@@ -14,6 +14,8 @@ import br.com.rafaelmaia.mar_de_beleza_system.services.AppointmentService;
 import br.com.rafaelmaia.mar_de_beleza_system.services.exceptions.BusinessRuleException;
 import br.com.rafaelmaia.mar_de_beleza_system.services.exceptions.ObjectNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -24,11 +26,12 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class AppointmentServiceImpl implements AppointmentService {
+
+    private static final Logger logger = LoggerFactory.getLogger(AppointmentServiceImpl.class);
 
     private final AppointmentRepository appointmentRepository;
 
@@ -60,8 +63,9 @@ public class AppointmentServiceImpl implements AppointmentService {
     @Override
     @Transactional
     public AppointmentResponseDTO create(AppointmentRequestDTO request) {
-        // Validação de conflitos com agendamentos existentes
+        logger.info("Iniciando processo de criação de agendamento para o cliente ID: {}", request.clientId());
 
+        // Validação de conflitos com agendamentos existentes
         // Carrega os serviços para obter duração total e validar existência
         List<Long> serviceIds = request.items().stream()
                 .map(AppointmentItemRequestDTO::salonServiceId).toList();
@@ -69,6 +73,7 @@ public class AppointmentServiceImpl implements AppointmentService {
 
         // Garante que todos os serviços solicitados foram encontrados
         if(requestedServices.size() != serviceIds.size()){
+            logger.warn("Tentativa de criar agendamento com um ou mais IDs de serviço inválidos.");
             throw new ObjectNotFoundException("Um ou mais serviços não foram encontrados.");
         }
 
@@ -76,6 +81,8 @@ public class AppointmentServiceImpl implements AppointmentService {
         int totalDurationInMinutes = requestedServices.stream().mapToInt(SalonService::getDurationInMinutes).sum();
         LocalDateTime newAppointmentStartTime = request.appointmentDate();
         LocalDateTime newAppointmentEndTime = newAppointmentStartTime.plusMinutes(totalDurationInMinutes);
+
+        logger.debug("Verificando conflitos. Novo horário: {} a {}. Duração total: {} minutos.", newAppointmentStartTime, newAppointmentEndTime, totalDurationInMinutes);
 
         // Verifica se algum profissional já está ocupado nesse horário
         for (AppointmentItemRequestDTO item : request.items()) {
@@ -92,6 +99,7 @@ public class AppointmentServiceImpl implements AppointmentService {
                 LocalDateTime existingEndTime = existingStartTime.plusMinutes(existingDuration);
 
                 if (newAppointmentStartTime.isBefore(existingEndTime) && newAppointmentEndTime.isAfter(existingStartTime)) {
+                    logger.warn("Conflito de horário detectado para o profissional ID {}. Horário solicitado colide com agendamento existente ID {}.", professionalId, existingAppointment.getId());
                     throw new BusinessRuleException(
                             "Conflito de horário: O profissional já tem um agendamento das " +
                                     existingStartTime.toLocalTime() + " às " + existingEndTime.toLocalTime()
@@ -99,9 +107,9 @@ public class AppointmentServiceImpl implements AppointmentService {
                 }
             }
         }
+        logger.info("Nenhum conflito de horário encontrado. Prosseguindo com a criação.");
 
         // Criação do agendamento após passar nas validações
-
         Client client = clientRepository.findById(request.clientId())
                 .orElseThrow(() -> new ObjectNotFoundException("Cliente não encontrado com id " + request.clientId()));
 
@@ -138,6 +146,8 @@ public class AppointmentServiceImpl implements AppointmentService {
         appointment.setServices(appointmentItems);
 
         appointment = appointmentRepository.save(appointment);
+        logger.info("Agendamento criado com sucesso com ID: {}", appointment.getId());
+
         return AppointmentResponseDTO.fromEntity(appointment);
     }
 
