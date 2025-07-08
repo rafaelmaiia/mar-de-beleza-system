@@ -14,7 +14,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import java.net.URI;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -30,8 +32,14 @@ public class AppointmentController implements AppointmentControllerDocs {
     @PostMapping
     @Override
     public ResponseEntity<AppointmentResponseDTO> create(@RequestBody @Valid AppointmentRequestDTO request) {
-        AppointmentResponseDTO created = appointmentService.create(request);
-        return new ResponseEntity<>(created, HttpStatus.CREATED);
+        AppointmentResponseDTO newAppointmentDTO = appointmentService.create(request);
+
+        URI uri = ServletUriComponentsBuilder.fromCurrentRequest()
+                .path("/{id}")
+                .buildAndExpand(newAppointmentDTO.id())
+                .toUri();
+
+        return ResponseEntity.created(uri).body(newAppointmentDTO);
     }
 
     @GetMapping
