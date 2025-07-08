@@ -7,12 +7,16 @@ import br.com.rafaelmaia.mar_de_beleza_system.services.AppointmentService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import java.net.URI;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -28,17 +32,24 @@ public class AppointmentController implements AppointmentControllerDocs {
     @PostMapping
     @Override
     public ResponseEntity<AppointmentResponseDTO> create(@RequestBody @Valid AppointmentRequestDTO request) {
-        AppointmentResponseDTO created = appointmentService.create(request);
-        return new ResponseEntity<>(created, HttpStatus.CREATED);
+        AppointmentResponseDTO newAppointmentDTO = appointmentService.create(request);
+
+        URI uri = ServletUriComponentsBuilder.fromCurrentRequest()
+                .path("/{id}")
+                .buildAndExpand(newAppointmentDTO.id())
+                .toUri();
+
+        return ResponseEntity.created(uri).body(newAppointmentDTO);
     }
 
     @GetMapping
     @Override
-    public ResponseEntity<List<AppointmentResponseDTO>> findAll(
+    public ResponseEntity<Page<AppointmentResponseDTO>> findAll(
             @RequestParam(value = "date", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)LocalDate date,
             @RequestParam(value = "professionalId", required = false) Long professionalId,
-            @RequestParam(value = "clientId", required = false) Long clientId) {
-        return ResponseEntity.ok(appointmentService.findAllAppointments(date, professionalId, clientId));
+            @RequestParam(value = "clientId", required = false) Long clientId,
+            Pageable pageable) {
+        return ResponseEntity.ok(appointmentService.findAllAppointments(date, professionalId, clientId, pageable));
     }
 
     @GetMapping("/{id}")

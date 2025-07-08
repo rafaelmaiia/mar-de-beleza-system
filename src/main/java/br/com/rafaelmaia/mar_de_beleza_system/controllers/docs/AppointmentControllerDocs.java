@@ -8,6 +8,8 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -60,7 +62,7 @@ public interface AppointmentControllerDocs {
                     @ApiResponse(description = "Internal Server Error", responseCode = "500", content = @Content)
             }
     )
-    ResponseEntity<List<AppointmentResponseDTO>> findAll(LocalDate date, Long professionalId, Long clientId);
+    ResponseEntity<Page<AppointmentResponseDTO>> findAll(LocalDate date, Long professionalId, Long clientId, Pageable pageable);
 
     @Operation(summary = "Find a Appointment",
             description = "Find a specific Appointment by their ID",
