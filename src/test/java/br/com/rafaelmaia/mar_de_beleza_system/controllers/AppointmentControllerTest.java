@@ -3,6 +3,7 @@ package br.com.rafaelmaia.mar_de_beleza_system.controllers;
 import br.com.rafaelmaia.mar_de_beleza_system.dto.AppointmentRequestDTO;
 import br.com.rafaelmaia.mar_de_beleza_system.dto.AppointmentItemRequestDTO;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -14,6 +15,13 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.transaction.annotation.Transactional;
+
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.is;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -54,5 +62,21 @@ class AppointmentControllerTest {
                 .andExpect(MockMvcResultMatchers.jsonPath("$.client.name").value("Fernanda Lima"));
     }
 
+    @Test
+    @WithMockUser
+    void shouldReturnFilteredAndPagedAppointmentsAndReturnStatus200() throws Exception {
+        mockMvc.perform(get("/api/v1/appointments")
+                    .param("date", "2025-06-15")
+                    .param("page", "0")
+                    .param("size", "5")
+                    .param("sort", "id,asc"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content", hasSize(1)))
+                .andExpect(jsonPath("$.content", hasSize(1)))
+                .andExpect(jsonPath("$.content[0].id", is(1)))
+                .andExpect(jsonPath("$.content[0].client.name", is("Fernanda Lima")))
+                .andExpect(jsonPath("$.totalPages", is(1)))
+                .andExpect(jsonPath("$.totalElements", is(1)));
+    }
 
 }
