@@ -29,7 +29,7 @@ Este é um **monorepo** contendo o backend e o frontend.
 
 ### 1. Clone o Repositório
 ```bash
-git clone [https://github.com/rafaelmaiia/mar-de-beleza-system.git](https://github.com/rafaelmaiia/mar-de-beleza-system.git)
+git clone https://github.com/rafaelmaiia/mar-de-beleza-system.git
 cd mar-de-beleza-system
 ```
 
@@ -51,10 +51,6 @@ npm run dev
 ```
 
 A aplicação estará disponível em: http://localhost:5173
-
-## Status do Projeto
-
-O backend está em uma fase robusta e madura, com as principais funcionalidades de CRUD, segurança com JWT, validação, lógica de negócio e testes implementados. **O foco atual é no desenvolvimento da interface do frontend em React + TypeScript.**
 
 ## Status do Projeto
 
