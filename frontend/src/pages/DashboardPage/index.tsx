@@ -1,15 +1,42 @@
 import { useState, useEffect } from 'react';
 import { Header } from '../../components/Header';
 import { AppointmentCard } from '../../components/AppointmentCard';
+import { DateSelector } from '../../components/DateSelector';
+import { AppointmentModal } from '../../components/AppointmentModal';
 import type { Appointment } from '../../types/appointment';
 
 // DUMMY_LOGGED_IN_USER é um usuário fictício para exibir no cabeçalho
 const DUMMY_LOGGED_IN_USER = { name: 'Ana Paula' };
 
 export function DashboardPage() {
+
+  const [currentDate, setCurrentDate] = useState(new Date());
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const isToday = () => {
+    const today = new Date();
+    return currentDate.toDateString() === today.toDateString();
+  };
+
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const handleRefresh = () => {
+    setRefreshTrigger(prev => prev + 1);
+  };
+
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingAppointment, setEditingAppointment] = useState<Appointment | null>(null);
+
+  const handleOpenCreateModal = () => {
+    setEditingAppointment(null); // Garante que estamos no modo "criar"
+    setIsModalOpen(true);
+  };
+
+  const handleOpenEditModal = (appointment: Appointment) => {
+    setEditingAppointment(appointment); // Passa o agendamento para o estado
+    setIsModalOpen(true);
+  };
 
   useEffect(() => {
     const fetchAppointments = async () => {
@@ -23,10 +50,10 @@ export function DashboardPage() {
         return;
       }
 
-      const today = new Date().toISOString().split('T')[0];
+      const dateString = currentDate.toISOString().split('T')[0];
 
       try {
-        const response = await fetch(`http://localhost:8080/api/v1/appointments?date=${today}&sort=appointmentDate,asc`, {
+        const response = await fetch(`http://localhost:8080/api/v1/appointments?date=${dateString}&sort=appointmentDate,asc`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }
@@ -37,10 +64,6 @@ export function DashboardPage() {
         }
 
         const data = await response.json();
-
-        console.log("DADOS RECEBIDOS DA API:", data.content); // Log dos dados recebidos para depuração
-        console.log("CONTEÚDO DOS AGENDAMENTOS:", data.content);
-
         setAppointments(data.content || []);
       } catch (err: any) {
         setError(err.message);
@@ -51,7 +74,7 @@ export function DashboardPage() {
     };
 
     fetchAppointments();
-  }, []);
+  }, [currentDate, refreshTrigger]);
 
   const findNextAppointment = () => {
     const now = new Date();
@@ -59,7 +82,11 @@ export function DashboardPage() {
       .filter(app => app.status !== 'CANCELED' && app.status !== 'DONE')
       .find(app => new Date(app.appointmentDate) > now);
   };
-  
+
+  const handleDateChange = (newDate: Date) => {
+    setCurrentDate(newDate);
+  };
+
   const nextAppointment = findNextAppointment();
 
   // Funções para formatação
@@ -81,7 +108,7 @@ export function DashboardPage() {
           <p className="text-xl text-gray-700">Bem-vinda, <span className="font-semibold">{DUMMY_LOGGED_IN_USER.name}</span></p>
         </div>
 
-        {nextAppointment && (
+        {isToday() && nextAppointment && (
           <div className="mb-8">
             <h2 className="text-lg font-semibold text-gray-800 mb-3">Próximo agendamento</h2>
             <div className="bg-gradient-to-r from-purple-500 to-indigo-600 text-white p-5 rounded-xl shadow-lg">
@@ -99,9 +126,10 @@ export function DashboardPage() {
           </div>
         )}
 
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-lg font-semibold text-gray-800">Agenda do dia</h2>
-        </div>
+        <DateSelector 
+          selectedDate={currentDate}
+          onDateChange={handleDateChange}
+        />
 
         <div className="space-y-4">
           {isLoading && <p>Carregando agenda...</p>}
@@ -120,6 +148,7 @@ export function DashboardPage() {
               return (
                   <AppointmentCard
                       key={app.id}
+                      onEditClick={() => handleOpenEditModal(app)}
                       time={formatTime(app.appointmentDate)}
                       clientName={app.client.name}
                       professionalName={professionalName}
@@ -131,6 +160,25 @@ export function DashboardPage() {
           })}
         </div>
       </main>
+
+      {/* BOTÃO FLUTUANTE */}
+      <button 
+        onClick={handleOpenCreateModal}
+        className="fixed bottom-6 right-6 bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-5 rounded-full shadow-lg flex items-center gap-2 transition-transform transform hover:scale-110 z-50"
+      >
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+        <span className="hidden sm:inline">Novo Agendamento</span>
+      </button>
+
+      {/* O MODAL */}
+      {/* Só é renderizado se 'isModalOpen' for true */}
+      <AppointmentModal 
+        isOpen={isModalOpen}
+        onRequestClose={() => setIsModalOpen(false)}
+        selectedDate={currentDate}
+        onSaveSuccess={handleRefresh}
+        appointmentToEdit={editingAppointment}
+      />
     </div>
   );
 }
