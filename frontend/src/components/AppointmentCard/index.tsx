@@ -7,6 +7,7 @@ type AppointmentCardProps = {
   services: string;
   status: string;
   observations?: string;
+  onEditClick: () => void;
 };
 
 // DICIONÁRIO DE TRADUÇÕES
@@ -29,7 +30,7 @@ const statusStyles = {
   Reagendado:  { border: 'border-purple-500', bg: 'bg-purple-100', text: 'text-purple-800' },
 };
 
-export function AppointmentCard({ time, clientName, professionalName, services, status, observations }: AppointmentCardProps) {
+export function AppointmentCard({ time, clientName, professionalName, services, status, observations, onEditClick }: AppointmentCardProps) {
   
   const translatedStatus = statusTranslations[status as keyof typeof statusTranslations] || status;
   
@@ -62,10 +63,17 @@ export function AppointmentCard({ time, clientName, professionalName, services, 
       </div>
 
       {!isCanceled && (
-        <div className="absolute bottom-4 right-4">
-          <button className="text-gray-500 hover:text-blue-600 text-xl">
-            ✏️
-          </button>
+        <div className="absolute bottom-4 right-4 group">
+            <button 
+              onClick={onEditClick} 
+              className="p-2 rounded-full bg-gray-100 hover:bg-blue-100 hover:text-blue-700 transition-colors"
+              aria-label="Editar agendamento"
+            >
+              <span className="text-xl">✏️</span>
+            </button>
+            <div className="absolute bottom-full right-0 mb-2 hidden group-hover:block bg-gray-800 text-white text-xs rounded py-1 px-2">
+                Editar
+            </div>
         </div>
       )}
     </div>
