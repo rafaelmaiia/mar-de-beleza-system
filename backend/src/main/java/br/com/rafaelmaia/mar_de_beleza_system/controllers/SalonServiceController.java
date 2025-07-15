@@ -16,7 +16,7 @@ import java.net.URI;
 import java.util.List;
 
 @RestController
-@RequestMapping(value = "/api/v1/SalonServices")
+@RequestMapping(value = "/api/v1/salonServices")
 @RequiredArgsConstructor
 @Tag(name = "SalonService", description = "Endpoints for Managing Salon Services")
 public class SalonServiceController implements SalonServiceControllerDocs {
