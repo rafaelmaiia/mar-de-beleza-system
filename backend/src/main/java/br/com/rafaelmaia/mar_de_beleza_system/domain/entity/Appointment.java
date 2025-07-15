@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -28,8 +29,16 @@ public class Appointment implements Serializable {
     @JoinColumn(name = "client_id", nullable = false)
     private Client client;
 
-    @OneToMany(mappedBy = "appointment", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<AppointmentItem> services = new ArrayList<>();
+    @ManyToOne
+    @JoinColumn(name = "professional_id", nullable = false)
+    private Professional professional;
+
+    @ManyToOne
+    @JoinColumn(name = "service_id", nullable = false)
+    private SalonService service;
+
+    @Column(nullable = false)
+    private BigDecimal price;
 
     @Column(nullable = false)
     private LocalDateTime appointmentDate;
