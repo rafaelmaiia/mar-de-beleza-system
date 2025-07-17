@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import toast from 'react-hot-toast';
 import { useForm, SubmitHandler } from 'react-hook-form';
 import { useAuth } from '../../hooks/useAuth';
 import type { AuthRequest } from '../../dtos/AuthRequest';
@@ -10,10 +11,11 @@ export function LoginPage() {
     const [apiError, setApiError] = useState<string | null>(null);
 
     const handleLogin: SubmitHandler<AuthRequest> = async (data) => {
+        setApiError(null);
         try {
         await login(data);
         } catch (err: any) {
-        setApiError(err.message);
+        toast.error(err.message || 'Falha no login.');
         }
     };
 

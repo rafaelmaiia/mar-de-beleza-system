@@ -7,6 +7,7 @@ import { AppointmentCard } from '../../components/AppointmentCard';
 import { DateSelector } from '../../components/DateSelector';
 import { AppointmentModal } from '../../components/AppointmentModal';
 import type { Appointment } from '../../types/appointment';
+import { StatusUpdateModal } from '../../components/StatusUpdateModal';
 
 const decodeToken = (token: string) => {
   try {
@@ -55,6 +56,16 @@ export function DashboardPage() {
   const handleOpenEditModal = (appointment: Appointment) => {
     setEditingAppointment(appointment); // Passa o agendamento para o estado
     setIsModalOpen(true);
+  };
+
+  const [statusUpdateAppointment, setStatusUpdateAppointment] = useState<Appointment | null>(null);
+
+  const handleOpenStatusModal = (appointment: Appointment) => {
+    setStatusUpdateAppointment(appointment);
+  };
+
+  const handleCloseStatusModal = () => {
+    setStatusUpdateAppointment(null);
   };
 
   useEffect(() => {
@@ -183,6 +194,7 @@ export function DashboardPage() {
             <AppointmentCard
               key={app.id}
               onEditClick={() => handleOpenEditModal(app)}
+              onStatusClick={() => handleOpenStatusModal(app)}
               time={formatTime(app.appointmentDate)}
               clientName={app.client.name}
               clientPhone={app.client.contact.phone}
@@ -213,6 +225,17 @@ export function DashboardPage() {
         selectedDate={currentDate}
         onSaveSuccess={handleRefresh}
         appointmentToEdit={editingAppointment}
+      />
+
+      {/* NOVO MODAL DE STATUS */}
+      <StatusUpdateModal
+        isOpen={!!statusUpdateAppointment}
+        onRequestClose={handleCloseStatusModal}
+        onUpdateSuccess={() => {
+          handleCloseStatusModal();
+          handleRefresh(); // Reutiliza a função de refresh que já temos!
+        }}
+        appointment={statusUpdateAppointment}
       />
     </div>
   );

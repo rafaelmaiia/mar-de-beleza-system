@@ -1,4 +1,5 @@
 import React from 'react';
+import { statusTranslations, statusStyles } from './styles';
 
 type AppointmentCardProps = {
   time: string;
@@ -10,29 +11,10 @@ type AppointmentCardProps = {
   status: string;
   observations?: string;
   onEditClick: () => void;
+  onStatusClick: () => void;
 };
 
-// DICIONÁRIO DE TRADUÇÕES
-const statusTranslations = {
-  SCHEDULED: 'Agendado',
-  CONFIRMED: 'Confirmado',
-  DONE: 'Concluído',
-  CANCELED: 'Cancelado',
-  NO_SHOW: 'Não Compareceu',
-  RESCHEDULED: 'Reagendado',
-};
-
-// DICIONÁRIO DE ESTILOS STATUS
-const statusStyles = {
-  Agendado:    { border: 'border-yellow-500', bg: 'bg-yellow-100', text: 'text-yellow-800' },
-  Confirmado:  { border: 'border-blue-500',   bg: 'bg-blue-100',   text: 'text-blue-800'   },
-  Concluído:   { border: 'border-green-500',  bg: 'bg-green-100',  text: 'text-green-800'  },
-  Cancelado:   { border: 'border-red-500',    bg: 'bg-red-100',    text: 'text-red-800'    },
-  'Não Compareceu': { border: 'border-gray-500',   bg: 'bg-gray-200',   text: 'text-gray-800'   },
-  Reagendado:  { border: 'border-purple-500', bg: 'bg-purple-100', text: 'text-purple-800' },
-};
-
-export function AppointmentCard({ time, clientName, clientPhone, professionalName, services, price, status, observations, onEditClick }: AppointmentCardProps) {
+export function AppointmentCard({ time, clientName, clientPhone, professionalName, services, price, status, observations, onEditClick, onStatusClick }: AppointmentCardProps) {
   
   const translatedStatus = statusTranslations[status as keyof typeof statusTranslations] || status;
   
@@ -47,7 +29,9 @@ export function AppointmentCard({ time, clientName, clientPhone, professionalNam
       
       <div className="flex items-center justify-between mb-2">
         <span className={`font-bold text-lg ${isCanceled ? 'text-gray-500 line-through' : 'text-gray-800'}`}>{time}</span>
-        <span className={`text-xs font-semibold px-3 py-1 ${style.bg} ${style.text} rounded-full`}>{translatedStatus}</span>
+        <button onClick={onStatusClick} className={`text-xs font-semibold px-3 py-1 ${style.bg} ${style.text} rounded-full transition-transform hover:scale-105`}>
+          {translatedStatus}
+        </button>
       </div>
 
       <div className="mt-2 pr-10">

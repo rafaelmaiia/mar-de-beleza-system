@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import toast from 'react-hot-toast';
 import Modal from 'react-modal';
 import { useForm, Controller, SubmitHandler } from 'react-hook-form';
 import Select from 'react-select';
@@ -54,55 +55,54 @@ export function AppointmentModal({ isOpen, onRequestClose, selectedDate, onSaveS
       }
       const headers = { 'Authorization': `Bearer ${token}` };
 
-      // Busca clientes
-      fetch('http://localhost:8080/api/v1/clients', { headers })
+      const fetchClients = fetch('http://localhost:8080/api/v1/clients', { headers })
         .then(res => res.json())
-        .then(data => {
-          const list = data.content || data; 
-          const clientOptions = list.map((c: Client) => ({ value: c.id, label: c.name }));
-          setClients(clientOptions);
-        });
+        .then(data => (data.content || data).map((c: Client) => ({ value: c.id, label: c.name })));
 
-      // Busca profissionais
-      fetch('http://localhost:8080/api/v1/professionals', { headers })
+      const fetchProfessionals = fetch('http://localhost:8080/api/v1/professionals', { headers })
         .then(res => res.json())
-        .then(data => {
-          const list = data.content || data;
-          const professionalOptions = list.map((p: Professional) => ({ value: p.id, label: p.name }));
-          setProfessionals(professionalOptions);
-        });
+        .then(data => (data.content || data).map((p: Professional) => ({ value: p.id, label: p.name })));
 
-      // Busca serviços
-      fetch('http://localhost:8080/api/v1/salonServices', { headers })
+      const fetchServices = fetch('http://localhost:8080/api/v1/salonServices', { headers })
         .then(res => res.json())
-        .then(data => {
-          const list = data.content || data;
-          setServices(list);
-        });
+        .then(data => data.content || data);
       
-      if (appointmentToEdit) {
-        // MODO EDITAR:
-        console.log("Modo Edição: Preenchendo formulário para o agendamento ID:", appointmentToEdit.id);
-        
-        setValue('clientId', { value: appointmentToEdit.client.id, label: appointmentToEdit.client.name });
-        setValue('professionalId', { value: appointmentToEdit.professional.id, label: appointmentToEdit.professional.name });
-        setValue('serviceId', appointmentToEdit.service.id);
-        setValue('appointmentTime', format(new Date(appointmentToEdit.appointmentDate), 'HH:mm'));
-        setValue('price', appointmentToEdit.price);
-        setValue('observations', appointmentToEdit.observations || '')
-      } else {
-        // MODO CRIAR: O modal abriu, mas não há agendamento para editar.
-        // Limpa o formulário
-        console.log("Modo Criação: Resetando o formulário.");
-        reset({
-            clientId: null,
-            professionalId: null,
-            serviceId: undefined,
-            appointmentTime: '',
-            price: undefined,
-            observations: ''
+      Promise.all([fetchClients, fetchProfessionals, fetchServices])
+        .then(([clientOptions, professionalOptions, serviceList]) => {
+          
+          // 3. Quando todas terminarem, atualizamos nossos estados de uma vez.
+          setClients(clientOptions);
+          setProfessionals(professionalOptions);
+          setServices(serviceList);
+
+          // 4. E SÓ AGORA, com os dados em mãos, decidimos se vamos preencher ou limpar o formulário.
+          if (appointmentToEdit) {
+            // MODO EDITAR:
+            console.log("Modo Edição: Preenchendo formulário para o agendamento ID:", appointmentToEdit.id);
+            setValue('clientId', { value: appointmentToEdit.client.id, label: appointmentToEdit.client.name });
+            setValue('professionalId', { value: appointmentToEdit.professional.id, label: appointmentToEdit.professional.name });
+            setValue('serviceId', appointmentToEdit.service.id);
+            setValue('appointmentTime', format(new Date(appointmentToEdit.appointmentDate), 'HH:mm'));
+            setValue('price', appointmentToEdit.price);
+            setValue('observations', appointmentToEdit.observations || '');
+          } else {
+            // MODO CRIAR: O modal abriu, mas não há agendamento para editar.
+            // Limpa o formulário
+            console.log("Modo Criação: Resetando o formulário.");
+            reset({
+              clientId: null,
+              professionalId: null,
+              serviceId: undefined,
+              appointmentTime: '',
+              price: undefined,
+              observations: ''
             });
-      }
+          }
+        })
+        .catch(error => {
+          console.error("Erro ao buscar dados para o modal:", error);
+          toast.error("Não foi possível carregar os dados do formulário.");
+        });
     }
   }, [isOpen, appointmentToEdit, reset, setValue]);
 
@@ -114,7 +114,6 @@ export function AppointmentModal({ isOpen, onRequestClose, selectedDate, onSaveS
       clientId: formData.clientId?.value,
       appointmentDate: fullAppointmentDate,
       observations: formData.observations,
-      status: appointmentToEdit?.status || 'SCHEDULED',
       salonServiceId: formData.serviceId,
       professionalId: formData.professionalId?.value,
       price: formData.price,
@@ -144,13 +143,13 @@ export function AppointmentModal({ isOpen, onRequestClose, selectedDate, onSaveS
       }
 
       // Se deu tudo certo
-      alert(`Agendamento ${appointmentToEdit ? 'atualizado' : 'criado'} com sucesso!`);
+      toast.success(`Agendamento ${appointmentToEdit ? 'atualizado' : 'criado'} com sucesso!`);
       onSaveSuccess();
       reset();
       onRequestClose();
 
     } catch (err: any) {
-      alert(`Erro: ${err.message}`);
+      toast.error(err.message || 'Ocorreu um erro desconhecido.');
     }
   };
     // --- FIM DA LÓGICA DE ENVIO ---
