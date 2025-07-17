@@ -1,5 +1,6 @@
 package br.com.rafaelmaia.mar_de_beleza_system.security.jwt;
 
+import br.com.rafaelmaia.mar_de_beleza_system.domain.entity.AppUser;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import org.springframework.beans.factory.annotation.Value;
@@ -7,6 +8,8 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 @Service
 public class JwtService {
@@ -16,9 +19,18 @@ public class JwtService {
 
     private final long expiration = 86400000; // 1 dia em milissegundos
 
-    public String generateToken(UserDetails userDetails) {
+    public String generateToken(AppUser user) {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("fullName", user.getName());
+        claims.put("role", user.getRole().name());
+
+        return createToken(claims, user.getEmail());
+    }
+
+    private String createToken(Map<String, Object> claims, String subject) {
         return Jwts.builder()
-                .setSubject(userDetails.getUsername())
+                .setClaims(claims)
+                .setSubject(subject)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + expiration))
                 .signWith(SignatureAlgorithm.HS256, secret)

@@ -43,7 +43,7 @@ public class AuthController {
         var user = appUserRepository.findByEmail(request.email())
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
-        String token = jwtService.generateToken(SecurityUtils.toUserDetails(user));
+        String token = jwtService.generateToken(user);
         return ResponseEntity.ok(new AuthResponse(token));
     }
 }
