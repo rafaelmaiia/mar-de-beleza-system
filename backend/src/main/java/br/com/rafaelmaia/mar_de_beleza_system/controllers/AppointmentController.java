@@ -3,6 +3,7 @@ package br.com.rafaelmaia.mar_de_beleza_system.controllers;
 import br.com.rafaelmaia.mar_de_beleza_system.controllers.docs.AppointmentControllerDocs;
 import br.com.rafaelmaia.mar_de_beleza_system.dto.AppointmentRequestDTO;
 import br.com.rafaelmaia.mar_de_beleza_system.dto.AppointmentResponseDTO;
+import br.com.rafaelmaia.mar_de_beleza_system.dto.StatusUpdateRequestDTO;
 import br.com.rafaelmaia.mar_de_beleza_system.services.AppointmentService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -10,15 +11,14 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.format.annotation.DateTimeFormat;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
 import java.time.LocalDate;
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/appointments")
@@ -58,7 +58,7 @@ public class AppointmentController implements AppointmentControllerDocs {
         return ResponseEntity.ok(appointmentService.findAppointmentById(id));
     }
 
-    @PutMapping("/{id}")
+    @PutMapping
     @Override
     public ResponseEntity<AppointmentResponseDTO> update(
             @PathVariable Long id,
@@ -71,6 +71,13 @@ public class AppointmentController implements AppointmentControllerDocs {
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         appointmentService.delete(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @PatchMapping("/{id}/status")
+    @PreAuthorize("isAuthenticated()")
+    @Override
+    public ResponseEntity<AppointmentResponseDTO> updateStatus(@PathVariable Long id, @RequestBody @Valid StatusUpdateRequestDTO statusUpdateDTO) {
+        return ResponseEntity.ok(appointmentService.updateStatus(id, statusUpdateDTO));
     }
 }
 

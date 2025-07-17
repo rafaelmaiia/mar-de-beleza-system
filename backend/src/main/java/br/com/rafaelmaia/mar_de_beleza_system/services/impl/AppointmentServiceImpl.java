@@ -1,9 +1,13 @@
 package br.com.rafaelmaia.mar_de_beleza_system.services.impl;
 
-import br.com.rafaelmaia.mar_de_beleza_system.domain.entity.*;
+import br.com.rafaelmaia.mar_de_beleza_system.domain.entity.Appointment;
+import br.com.rafaelmaia.mar_de_beleza_system.domain.entity.Client;
+import br.com.rafaelmaia.mar_de_beleza_system.domain.entity.Professional;
+import br.com.rafaelmaia.mar_de_beleza_system.domain.entity.SalonService;
 import br.com.rafaelmaia.mar_de_beleza_system.domain.enums.AppointmentStatus;
 import br.com.rafaelmaia.mar_de_beleza_system.dto.AppointmentRequestDTO;
 import br.com.rafaelmaia.mar_de_beleza_system.dto.AppointmentResponseDTO;
+import br.com.rafaelmaia.mar_de_beleza_system.dto.StatusUpdateRequestDTO;
 import br.com.rafaelmaia.mar_de_beleza_system.repository.AppointmentRepository;
 import br.com.rafaelmaia.mar_de_beleza_system.repository.ClientRepository;
 import br.com.rafaelmaia.mar_de_beleza_system.repository.ProfessionalRepository;
@@ -23,7 +27,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -172,7 +175,7 @@ public class AppointmentServiceImpl implements AppointmentService {
         appointmentToUpdate.setAppointmentDate(startTime);
         appointmentToUpdate.setPrice(request.price());
         appointmentToUpdate.setObservations(request.observations());
-        appointmentToUpdate.setStatus(request.status());
+        // appointmentToUpdate.setStatus(request.status()); Há um metodo próprio para edição de status
 
         Appointment updatedAppointment = appointmentRepository.save(appointmentToUpdate);
         logger.info("Agendamento ID {} atualizado com sucesso.", updatedAppointment.getId());
@@ -187,6 +190,19 @@ public class AppointmentServiceImpl implements AppointmentService {
             throw new ObjectNotFoundException("Appointment not found with id " + id);
         }
         appointmentRepository.deleteById(id);
+    }
+
+    @Override
+    @Transactional
+    public AppointmentResponseDTO updateStatus(Long id, StatusUpdateRequestDTO statusUpdateDTO) {
+        logger.info("Atualizando status do agendamento ID: {} para {}", id, statusUpdateDTO.status());
+        Appointment appointment = appointmentRepository.findById(id)
+                .orElseThrow(() -> new ObjectNotFoundException("Agendamento não encontrado com ID: " + id));
+
+        appointment.setStatus(statusUpdateDTO.status());
+        Appointment updatedAppointment = appointmentRepository.save(appointment);
+
+        return AppointmentResponseDTO.fromEntity(updatedAppointment);
     }
 
     private AppointmentResponseDTO mapToDTO(Appointment appointment) {

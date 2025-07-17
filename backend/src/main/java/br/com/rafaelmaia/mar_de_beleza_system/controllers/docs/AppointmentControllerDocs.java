@@ -2,6 +2,7 @@ package br.com.rafaelmaia.mar_de_beleza_system.controllers.docs;
 
 import br.com.rafaelmaia.mar_de_beleza_system.dto.AppointmentResponseDTO;
 import br.com.rafaelmaia.mar_de_beleza_system.dto.AppointmentRequestDTO;
+import br.com.rafaelmaia.mar_de_beleza_system.dto.StatusUpdateRequestDTO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -112,4 +113,21 @@ public interface AppointmentControllerDocs {
             }
     )
     ResponseEntity<Void> delete(@PathVariable Long id);
+
+    @PatchMapping("/{id}/status")
+    @Operation(summary = "Atualiza apenas o status de um agendamento",
+            description = "Endpoint rápido para modificar apenas o status de um agendamento existente (ex: para Confirmado, Concluído, etc.). Acessível por qualquer usuário autenticado.",
+            tags = {"Appointment"},
+            responses = {
+                    @ApiResponse(description = "Success", responseCode = "200", content = @Content(schema = @Schema(implementation = AppointmentResponseDTO.class))),
+                    @ApiResponse(description = "Bad Request (Validation Error)", responseCode = "400", content = @Content),
+                    @ApiResponse(description = "Unauthorized", responseCode = "401", content = @Content),
+                    @ApiResponse(description = "Forbidden", responseCode = "403", content = @Content),
+                    @ApiResponse(description = "Not Found", responseCode = "404", content = @Content)
+            }
+    )
+    ResponseEntity<AppointmentResponseDTO> updateStatus(
+            @PathVariable Long id,
+            @RequestBody @Valid StatusUpdateRequestDTO statusUpdateDTO);
+
 }
