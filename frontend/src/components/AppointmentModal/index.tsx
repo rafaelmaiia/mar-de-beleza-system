@@ -9,11 +9,11 @@ import type { SalonService } from '../../types/salonService';
 import type { Appointment } from '../../types/appointment';
 
 type FormData = {
-  clientId: { value: number; label: string };
-  professionalId: { value: number; label: string };
-  serviceId: number;
+  clientId: { value: number; label: string } | null;
+  professionalId: { value: number; label: string } | null;
+  serviceId: number | undefined;
   appointmentTime: string;
-  price: number;
+  price: number | undefined;
   observations: string;
 };
 
@@ -46,16 +46,20 @@ export function AppointmentModal({ isOpen, onRequestClose, selectedDate, onSaveS
   const { register, handleSubmit, control, reset, setValue, formState: { errors } } = useForm<FormData>();
   
   useEffect(() => {
-    
     if (isOpen) {
       const token = localStorage.getItem('accessToken');
+      if (!token) {
+        console.error("Token não encontrado, não é possível buscar dados para o formulário.");
+        return;
+      }
       const headers = { 'Authorization': `Bearer ${token}` };
 
       // Busca clientes
       fetch('http://localhost:8080/api/v1/clients', { headers })
         .then(res => res.json())
         .then(data => {
-          const clientOptions = data.map((c: Client) => ({ value: c.id, label: c.name }));
+          const list = data.content || data; 
+          const clientOptions = list.map((c: Client) => ({ value: c.id, label: c.name }));
           setClients(clientOptions);
         });
 
@@ -63,31 +67,36 @@ export function AppointmentModal({ isOpen, onRequestClose, selectedDate, onSaveS
       fetch('http://localhost:8080/api/v1/professionals', { headers })
         .then(res => res.json())
         .then(data => {
-          const professionalOptions = data.map((p: Professional) => ({ value: p.id, label: p.name }));
+          const list = data.content || data;
+          const professionalOptions = list.map((p: Professional) => ({ value: p.id, label: p.name }));
           setProfessionals(professionalOptions);
         });
 
       // Busca serviços
       fetch('http://localhost:8080/api/v1/salonServices', { headers })
         .then(res => res.json())
-        .then(data => setServices(data));
+        .then(data => {
+          const list = data.content || data;
+          setServices(list);
+        });
       
       if (appointmentToEdit) {
         // MODO EDITAR:
         console.log("Modo Edição: Preenchendo formulário para o agendamento ID:", appointmentToEdit.id);
+        
         setValue('clientId', { value: appointmentToEdit.client.id, label: appointmentToEdit.client.name });
-        setValue('professionalId', { value: appointmentToEdit.items[0].professional.id, label: appointmentToEdit.items[0].professional.name });
-        setValue('serviceId', appointmentToEdit.items[0].service.id);
+        setValue('professionalId', { value: appointmentToEdit.professional.id, label: appointmentToEdit.professional.name });
+        setValue('serviceId', appointmentToEdit.service.id);
         setValue('appointmentTime', format(new Date(appointmentToEdit.appointmentDate), 'HH:mm'));
-        setValue('price', appointmentToEdit.items[0].price);
-        setValue('observations', appointmentToEdit.observations || '');
+        setValue('price', appointmentToEdit.price);
+        setValue('observations', appointmentToEdit.observations || '')
       } else {
         // MODO CRIAR: O modal abriu, mas não há agendamento para editar.
         // Limpa o formulário
         console.log("Modo Criação: Resetando o formulário.");
         reset({
-            clientId: undefined,
-            professionalId: undefined,
+            clientId: null,
+            professionalId: null,
             serviceId: undefined,
             appointmentTime: '',
             price: undefined,
@@ -102,17 +111,13 @@ export function AppointmentModal({ isOpen, onRequestClose, selectedDate, onSaveS
     const fullAppointmentDate = `${datePart}T${formData.appointmentTime}:00`;
 
     const apiPayload = {
-      clientId: formData.clientId.value,
+      clientId: formData.clientId?.value,
       appointmentDate: fullAppointmentDate,
       observations: formData.observations,
-      status: 'SCHEDULED',
-      items: [
-        {
-          salonServiceId: formData.serviceId,
-          professionalId: formData.professionalId.value,
-          price: formData.price,
-        }
-      ]
+      status: appointmentToEdit?.status || 'SCHEDULED',
+      salonServiceId: formData.serviceId,
+      professionalId: formData.professionalId?.value,
+      price: formData.price,
     };
 
     // --- LÓGICA DE ENVIO API ---
@@ -133,8 +138,8 @@ export function AppointmentModal({ isOpen, onRequestClose, selectedDate, onSaveS
       });
 
       if (!response.ok) {
-        // Se a resposta for um erro (como 409 Conflict), tentamos ler a mensagem de erro
         const errorData = await response.json();
+        // O backend envia 'message' dentro de 'StandardError'
         throw new Error(errorData.error || 'Falha na operação.');
       }
 
