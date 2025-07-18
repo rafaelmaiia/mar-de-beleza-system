@@ -70,12 +70,10 @@ export function AppointmentModal({ isOpen, onRequestClose, selectedDate, onSaveS
       Promise.all([fetchClients, fetchProfessionals, fetchServices])
         .then(([clientOptions, professionalOptions, serviceList]) => {
           
-          // 3. Quando todas terminarem, atualizamos nossos estados de uma vez.
           setClients(clientOptions);
           setProfessionals(professionalOptions);
           setServices(serviceList);
 
-          // 4. E SÓ AGORA, com os dados em mãos, decidimos se vamos preencher ou limpar o formulário.
           if (appointmentToEdit) {
             // MODO EDITAR:
             console.log("Modo Edição: Preenchendo formulário para o agendamento ID:", appointmentToEdit.id);

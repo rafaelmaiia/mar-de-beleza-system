@@ -16,12 +16,12 @@ const customStyles = {
   content: {
     top: '50%', left: '50%', right: 'auto', bottom: 'auto',
     marginRight: '-50%', transform: 'translate(-50%, -50%)',
-    background: 'none', // Remove o fundo branco padrão da biblioteca
-    border: 'none',     // Remove a borda padrão
+    background: 'none',
+    border: 'none',
     padding: '0',
   },
   overlay: {
-    backgroundColor: 'rgba(0, 0, 0, 0.50)' // Fundo um pouco mais escuro
+    backgroundColor: 'rgba(0, 0, 0, 0.50)'
   }
 };
 
@@ -35,7 +35,6 @@ export function StatusUpdateModal({ isOpen, onRequestClose, onUpdateSuccess, app
   const handleStatusUpdate = async (newStatusKey: string) => {
     if (!appointment) return;
 
-    // O payload agora é muito mais simples!
     const apiPayload = {
       status: newStatusKey,
     };
@@ -62,14 +61,8 @@ export function StatusUpdateModal({ isOpen, onRequestClose, onUpdateSuccess, app
 
   return (
     <Modal isOpen={isOpen} onRequestClose={onRequestClose} style={customStyles}>
-      {/* A MUDANÇA ESTÁ AQUI: 
-        - Removemos 'w-11/12' para não limitar a largura.
-        - 'max-w-md' é uma classe que dá uma largura máxima maior.
-        - 'min-w-[300px]' garante uma largura mínima para evitar quebras.
-      */}
       <div className="bg-white rounded-lg shadow-xl p-6 min-w-[300px] max-w-md">
         
-        {/* Adicionamos 'whitespace-nowrap' para impedir a quebra de linha no título */}
         <h3 className="text-xl font-semibold mb-6 text-gray-800 text-center whitespace-nowrap">
           Atualizar Status do Agendamento
         </h3>
@@ -81,7 +74,6 @@ export function StatusUpdateModal({ isOpen, onRequestClose, onUpdateSuccess, app
               <button 
                 key={statusKey} 
                 onClick={() => handleStatusUpdate(statusKey)}
-                // O 'whitespace-nowrap' aqui também impede que o texto do botão quebre
                 className={`w-full ${style.bg} ${style.text} px-4 py-3 rounded-md hover:opacity-80 font-semibold transition-opacity whitespace-nowrap`}
               >
                 {translatedValue}

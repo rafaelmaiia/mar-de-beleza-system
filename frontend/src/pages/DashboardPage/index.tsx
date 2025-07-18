@@ -49,12 +49,12 @@ export function DashboardPage() {
   const [editingAppointment, setEditingAppointment] = useState<Appointment | null>(null);
 
   const handleOpenCreateModal = () => {
-    setEditingAppointment(null); // Garante que estamos no modo "criar"
+    setEditingAppointment(null);
     setIsModalOpen(true);
   };
 
   const handleOpenEditModal = (appointment: Appointment) => {
-    setEditingAppointment(appointment); // Passa o agendamento para o estado
+    setEditingAppointment(appointment);
     setIsModalOpen(true);
   };
 
@@ -106,9 +106,19 @@ export function DashboardPage() {
 
   const findNextAppointment = () => {
     const now = new Date();
-    return appointments
-      .filter(app => app.status !== 'CANCELED' && app.status !== 'DONE')
-      .find(app => new Date(app.appointmentDate) > now);
+    
+    const upcomingAppointments = appointments.filter(app => 
+      (app.status === 'SCHEDULED' || app.status === 'CONFIRMED') &&
+      new Date(app.appointmentDate) > now
+    );
+
+    if (upcomingAppointments.length === 0) {
+      return null;
+    }
+
+    upcomingAppointments.sort((a, b) => new Date(a.appointmentDate).getTime() - new Date(b.appointmentDate).getTime());
+    
+    return upcomingAppointments[0];
   };
 
   const handleDateChange = (newDate: Date) => {
@@ -227,13 +237,13 @@ export function DashboardPage() {
         appointmentToEdit={editingAppointment}
       />
 
-      {/* NOVO MODAL DE STATUS */}
+      {/* MODAL STATUS */}
       <StatusUpdateModal
         isOpen={!!statusUpdateAppointment}
         onRequestClose={handleCloseStatusModal}
         onUpdateSuccess={() => {
           handleCloseStatusModal();
-          handleRefresh(); // Reutiliza a função de refresh que já temos!
+          handleRefresh();
         }}
         appointment={statusUpdateAppointment}
       />
