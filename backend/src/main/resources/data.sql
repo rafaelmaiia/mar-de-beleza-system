@@ -45,6 +45,17 @@ INSERT INTO tb_professional (name, contact_id) VALUES
 
 
 -- =============================================
+--  Especialidades dos Profissionais
+-- =============================================
+INSERT INTO tb_professional_specialties (professional_id, specialty) VALUES
+(1, 'HAIR'),      -- Ana Silva faz Cabelo
+(1, 'EYEBROW'),   -- Ana Silva também faz Sobrancelha
+(2, 'LASH'),      -- Beatriz Costa faz Cílios
+(3, 'MANICURE'),  -- Carla Dias faz Manicure
+(3, 'OTHER');     -- e também Outros serviços
+
+
+-- =============================================
 --  Serviços do Salão (SalonService)
 -- =============================================
 INSERT INTO tb_salon_service (name, service_type, duration_in_minutes, price) VALUES

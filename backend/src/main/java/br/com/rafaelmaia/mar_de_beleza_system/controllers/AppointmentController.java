@@ -58,7 +58,7 @@ public class AppointmentController implements AppointmentControllerDocs {
         return ResponseEntity.ok(appointmentService.findAppointmentById(id));
     }
 
-    @PutMapping
+    @RequestMapping(value = "/{id}", method = {RequestMethod.PUT, RequestMethod.PATCH})
     @Override
     public ResponseEntity<AppointmentResponseDTO> update(
             @PathVariable Long id,

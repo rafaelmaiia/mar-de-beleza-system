@@ -1,6 +1,7 @@
 package br.com.rafaelmaia.mar_de_beleza_system.controllers;
 
 import br.com.rafaelmaia.mar_de_beleza_system.controllers.docs.ProfessionalControllerDocs;
+import br.com.rafaelmaia.mar_de_beleza_system.domain.enums.ServiceType;
 import br.com.rafaelmaia.mar_de_beleza_system.dto.ProfessionalRequestDTO;
 import br.com.rafaelmaia.mar_de_beleza_system.dto.ProfessionalResponseDTO;
 import br.com.rafaelmaia.mar_de_beleza_system.services.ProfessionalService;
@@ -31,8 +32,10 @@ public class ProfessionalController implements ProfessionalControllerDocs {
 
     @GetMapping
     @Override
-    public ResponseEntity<List<ProfessionalResponseDTO>> findAll() {
-        return ResponseEntity.ok(service.findAllProfessionals());
+    public ResponseEntity<List<ProfessionalResponseDTO>> findAll(
+            @RequestParam(value = "specialty", required = false) ServiceType specialty
+    ) {
+        return ResponseEntity.ok(service.findAllProfessionals(specialty));
     }
 
     @PostMapping

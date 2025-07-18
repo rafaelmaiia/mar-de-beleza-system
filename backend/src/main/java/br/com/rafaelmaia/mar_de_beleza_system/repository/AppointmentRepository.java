@@ -18,4 +18,6 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long>,
             "AND a.appointmentDate >= :startOfDay " +
             "AND a.appointmentDate < :endOfDay")
     List<Appointment> findPotentialConflicts(Long professionalId, LocalDateTime startOfDay, LocalDateTime endOfDay);
+
+    boolean existsByServiceId(Long serviceId);
 }
