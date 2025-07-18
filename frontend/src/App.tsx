@@ -3,6 +3,7 @@ import { Toaster } from 'react-hot-toast';
 import { LoginPage } from './pages/LoginPage';
 import { DashboardPage } from './pages/DashboardPage';
 import { ProtectedRoute } from './components/ProtectedRoute';
+import { ServiceManagementPage } from './pages/ServiceManagementPage';
 
 function App() {
   return (
@@ -12,13 +13,13 @@ function App() {
         toastOptions={{
           success: {
             style: {
-              background: '#2ecc71', // Verde
+              background: '#2ecc71',
               color: 'white',
             },
           },
           error: {
             style: {
-              background: '#e74c3c', // Vermelho
+              background: '#e74c3c',
               color: 'white',
             },
           },
@@ -36,6 +37,14 @@ function App() {
             </ProtectedRoute>
           } 
         />
+        <Route 
+        path="/services"
+        element={
+          <ProtectedRoute>
+            <ServiceManagementPage />
+          </ProtectedRoute>
+        } 
+      />
       </Routes>
     </>
   );
