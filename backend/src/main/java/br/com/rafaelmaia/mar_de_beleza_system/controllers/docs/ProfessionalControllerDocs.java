@@ -1,5 +1,6 @@
 package br.com.rafaelmaia.mar_de_beleza_system.controllers.docs;
 
+import br.com.rafaelmaia.mar_de_beleza_system.domain.enums.ServiceType;
 import br.com.rafaelmaia.mar_de_beleza_system.dto.ProfessionalRequestDTO;
 import br.com.rafaelmaia.mar_de_beleza_system.dto.ProfessionalResponseDTO;
 import io.swagger.v3.oas.annotations.Operation;
@@ -11,6 +12,7 @@ import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.List;
 
@@ -35,7 +37,7 @@ public interface ProfessionalControllerDocs {
                     @ApiResponse(description = "Unauthorized", responseCode = "401", content = @Content)
             }
     )
-    ResponseEntity<List<ProfessionalResponseDTO>> findAll();
+    ResponseEntity<List<ProfessionalResponseDTO>> findAll(@RequestParam(value = "specialty", required = false) ServiceType specialty);
 
     @Operation(summary = "Adds a new Professional",
             description = "Adds a new Professional. Only accessible by ADMIN users.",
