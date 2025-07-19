@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 
 type HeaderProps = {
@@ -10,6 +10,15 @@ export function Header({ title }: HeaderProps) {
   const { logout } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  const isHomePage = location.pathname === '/dashboard';
+
+  const handleGoBack = () => {
+    navigate(-1);
+  };
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -30,18 +39,34 @@ export function Header({ title }: HeaderProps) {
       <div className="max-w-4xl mx-auto px-4">
         <div className="relative flex items-center justify-center h-16">
           
+          {/* --- LÓGICA BOTÃO DA ESQUERDA/VOLTAR --- */}
           <div className="absolute left-0">
-            <button 
-              onClick={logout} 
-              className="text-gray-600 hover:text-red-600 focus:outline-none p-2 rounded-full hover:bg-gray-100 transition-colors"
-              title="Sair"
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
-            </button>
+            {isHomePage ? (
+              // Se estiver na Home, mostra o botão de Sair
+              <button 
+                onClick={logout} 
+                className="text-gray-600 hover:text-red-600 focus:outline-none p-2 rounded-full hover:bg-gray-100 transition-colors"
+                title="Sair"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+              </button>
+            ) : (
+              // Se estiver em outra página, mostra o botão de Voltar
+              <button 
+                onClick={handleGoBack}
+                className="text-gray-600 hover:text-gray-900 focus:outline-none p-2 rounded-full hover:bg-gray-100 transition-colors"
+                title="Voltar"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7"></path></svg>
+              </button>
+            )}
           </div>
 
+          {/* --- TÍTULO LINK PARA A HOME --- */}
           <div className="flex-1 text-center">
-            <h1 className="text-3xl font-bold text-gray-800 font-playfair">{title}</h1>
+            <Link to="/dashboard" className="text-3xl font-bold text-gray-800 font-playfair hover:opacity-75 transition-opacity">
+              {title}
+            </Link>
           </div>
 
           {/* Botão do Menu Dropdown */}

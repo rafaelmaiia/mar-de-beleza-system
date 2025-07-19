@@ -162,20 +162,34 @@ export function DashboardPage() {
             <h2 className="text-lg font-semibold text-gray-800 mb-3">Próximo agendamento</h2>
             <div className="bg-gradient-to-r from-purple-500 to-indigo-600 text-white p-5 rounded-xl shadow-lg transform hover:scale-105 transition-transform duration-300">
               
-              {/* Container principal com Flexbox */}
               <div className="flex justify-between items-start">
                 
-                {/* Div da Esquerda (empilhada) */}
-                <div>
+                {nextAppointment.client.contact.phoneIsWhatsapp ? (
+                  // Se TEM WhatsApp, o container principal é um link <a>
                   <a href={`https://api.whatsapp.com/send/?phone=55${nextAppointment.client.contact.phone}`} target="_blank" rel="noopener noreferrer" className="block hover:opacity-80 transition-opacity">
                     <p className="text-2xl font-bold">{nextAppointment.client.name}</p>
-                    <p className="text-xs opacity-80">{nextAppointment.client.contact.phone}</p>
+                    <div className="flex items-center gap-2 mt-1">
+                        <p className="text-xs opacity-80">{nextAppointment.client.contact.phone}</p>
+                        <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.894 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.886-.001 2.267.651 4.383 1.803 6.123l-1.218 4.439 4.555-1.193z"/></svg>
+                    </div>
+                    <div className="mt-2">
+                      <p className="text-sm opacity-90">{nextAppointment.service.name}</p>
+                      <p className="text-sm font-semibold opacity-90 mt-1">R$ {nextAppointment.price.toFixed(2).replace('.', ',')}</p>
+                    </div>
                   </a>
-                  <div className="mt-2">
-                    <p className="text-sm opacity-90">{nextAppointment.service.name}</p>
-                    <p className="text-sm font-semibold opacity-90 mt-1">R$ {nextAppointment.price.toFixed(2).replace('.', ',')}</p>
+                ) : (
+                  // Se NÃO TEM WhatsApp, o container principal é um div
+                  <div>
+                    <p className="text-2xl font-bold">{nextAppointment.client.name}</p>
+                     <div className="flex items-center gap-2 mt-1">
+                        <p className="text-xs opacity-80">{nextAppointment.client.contact.phone}</p>
+                    </div>
+                    <div className="mt-2">
+                      <p className="text-sm opacity-90">{nextAppointment.service.name}</p>
+                      <p className="text-sm font-semibold opacity-90 mt-1">R$ {nextAppointment.price.toFixed(2).replace('.', ',')}</p>
+                    </div>
                   </div>
-                </div>
+                )}
 
                 {/* Div da Direita (empilhada e alinhada à direita) */}
                 <div className="text-right">
@@ -203,16 +217,9 @@ export function DashboardPage() {
           {!isLoading && !error && appointments.map(app => (
             <AppointmentCard
               key={app.id}
+              appointment={app}
               onEditClick={() => handleOpenEditModal(app)}
               onStatusClick={() => handleOpenStatusModal(app)}
-              time={formatTime(app.appointmentDate)}
-              clientName={app.client.name}
-              clientPhone={app.client.contact.phone}
-              professionalName={app.professional.name}
-              services={app.service.name}
-              price={app.price}
-              status={app.status}
-              observations={app.observations}
             />
           ))}
         </div>

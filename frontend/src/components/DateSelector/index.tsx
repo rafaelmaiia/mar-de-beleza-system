@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { DayPicker } from 'react-day-picker';
 import { format, addDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -12,6 +12,23 @@ type DateSelectorProps = {
 
 export function DateSelector({ selectedDate, onDateChange }: DateSelectorProps) {
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+  const calendarRef = useRef<HTMLDivElement>(null);
+
+  // Hook para detectar cliques fora do calendário
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      // Se a nossa "âncora" existe E o clique NÃO foi dentro dela
+      if (calendarRef.current && !calendarRef.current.contains(event.target as Node)) {
+        setIsCalendarOpen(false); // Fecha o calendário
+      }
+    }
+    // Adiciona um "espião" para detectar cliques fora do calendário
+    document.addEventListener("mousedown", handleClickOutside);
+    // Função de limpeza: remove o "espião" quando o componente é desmontado
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [calendarRef]);
 
   const handleDayClick = (day: Date | undefined) => {
     if (day) {
@@ -51,7 +68,7 @@ export function DateSelector({ selectedDate, onDateChange }: DateSelectorProps) 
       </div>
 
       {isCalendarOpen && (
-        <div className="absolute top-12 right-0 bg-white rounded-lg shadow-xl p-4 z-10">
+        <div ref={calendarRef} className="absolute top-12 right-0 bg-white rounded-lg shadow-xl p-4 z-10">
           <DayPicker
             mode="single"
             selected={selectedDate}
