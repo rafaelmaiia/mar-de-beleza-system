@@ -3,8 +3,10 @@ package br.com.rafaelmaia.mar_de_beleza_system.services.impl;
 import br.com.rafaelmaia.mar_de_beleza_system.domain.entity.SalonService;
 import br.com.rafaelmaia.mar_de_beleza_system.dto.SalonServiceRequestDTO;
 import br.com.rafaelmaia.mar_de_beleza_system.dto.SalonServiceResponseDTO;
+import br.com.rafaelmaia.mar_de_beleza_system.repository.AppointmentRepository;
 import br.com.rafaelmaia.mar_de_beleza_system.repository.SalonServiceRepository;
 import br.com.rafaelmaia.mar_de_beleza_system.services.SalonServiceService;
+import br.com.rafaelmaia.mar_de_beleza_system.services.exceptions.DataIntegrityViolationException;
 import br.com.rafaelmaia.mar_de_beleza_system.services.exceptions.ObjectNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
@@ -21,6 +23,7 @@ import java.util.stream.Collectors;
 public class SalonServiceServiceImpl implements SalonServiceService {
 
     private final SalonServiceRepository repository;
+    private final AppointmentRepository appointmentRepository;
 
     @Override
     @Transactional(readOnly = true)
@@ -72,6 +75,14 @@ public class SalonServiceServiceImpl implements SalonServiceService {
         if (!repository.existsById(id)) {
             throw new ObjectNotFoundException("Serviço não encontrado com ID: " + id);
         }
+
+        // Verifica se algum agendamento está usando este serviço
+        if (appointmentRepository.existsByServiceId(id)) {
+            throw new DataIntegrityViolationException(
+                    "Este serviço não pode ser excluído pois já está vinculado a um ou mais agendamentos."
+            );
+        }
+
         repository.deleteById(id);
     }
 }

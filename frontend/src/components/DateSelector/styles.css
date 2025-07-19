@@ -1,0 +1,6 @@
+.rdp {
+    --rdp-cell-size: 40px;
+    --rdp-accent-color: #4f46e5; /* Indigo-600 */
+    --rdp-background-color: #c7d2fe; /* Indigo-200 */
+    margin: 1em;
+}

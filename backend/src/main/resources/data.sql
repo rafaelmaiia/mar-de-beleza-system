@@ -4,7 +4,6 @@
 -- =================================================================
 
 -- Opcional: Limpa as tabelas na ordem inversa de dependência para evitar erros de FK
-DELETE FROM tb_appointment_item;
 DELETE FROM tb_appointment;
 DELETE FROM tb_professional;
 DELETE FROM tb_client;
@@ -46,6 +45,17 @@ INSERT INTO tb_professional (name, contact_id) VALUES
 
 
 -- =============================================
+--  Especialidades dos Profissionais
+-- =============================================
+INSERT INTO tb_professional_specialties (professional_id, specialty) VALUES
+(1, 'HAIR'),      -- Ana Silva faz Cabelo
+(1, 'EYEBROW'),   -- Ana Silva também faz Sobrancelha
+(2, 'LASH'),      -- Beatriz Costa faz Cílios
+(3, 'MANICURE'),  -- Carla Dias faz Manicure
+(3, 'OTHER');     -- e também Outros serviços
+
+
+-- =============================================
 --  Serviços do Salão (SalonService)
 -- =============================================
 INSERT INTO tb_salon_service (name, service_type, duration_in_minutes, price) VALUES
@@ -66,33 +76,27 @@ INSERT INTO tb_client (name, birth_date, gender, contact_id) VALUES
 
 
 -- =============================================
---  Agendamentos (Appointments)
+--  Agendamentos (Appointments) - VERSÃO REFATORADA
 -- =============================================
+-- Cada linha agora representa UM serviço com UM profissional.
+
 -- Agendamento PASSADO para o histórico da cliente 1
-INSERT INTO tb_appointment (client_id, appointment_date, status, observations, created_at) VALUES
-(1, '2025-06-15 14:00:00', 'DONE', 'Cliente adorou o resultado da sobrancelha.', '2025-06-10 11:30:00');
+INSERT INTO tb_appointment (client_id, professional_id, service_id, price, appointment_date, status, observations, created_at) VALUES
+(1, 1, 1, 50.00, '2025-06-15 14:00:00', 'DONE', 'Cliente adorou o resultado da sobrancelha.', '2025-06-10 11:30:00');
 
--- Agendamento FUTURO para a cliente 2
-INSERT INTO tb_appointment (client_id, appointment_date, status, observations, created_at) VALUES
-(2, '2025-07-05 10:00:00', 'SCHEDULED', 'Cliente pediu para confirmar um dia antes.', '2025-06-22 18:00:00');
+-- O "combo" da cliente 2 agora são DOIS agendamentos separados e sequenciais.
+-- Primeiro, os cílios com a Beatriz.
+INSERT INTO tb_appointment (client_id, professional_id, service_id, price, appointment_date, status, observations, created_at) VALUES
+(2, 2, 2, 220.00, '2025-07-21 10:00:00', 'SCHEDULED', 'Aplicação completa de cílios.', '2025-07-14 10:00:00');
 
--- Agendamento para HOJE para a cliente 3
-INSERT INTO tb_appointment (client_id, appointment_date, status, observations, created_at) VALUES
-(3, '2025-06-24 16:30:00', 'CONFIRMED', 'Tolerância de 10 minutos de atraso.', '2025-06-23 09:12:00');
+-- Em seguida, a manicure com a Carla, começando depois que os cílios terminam.
+INSERT INTO tb_appointment (client_id, professional_id, service_id, price, appointment_date, status, observations, created_at) VALUES
+(2, 3, 4, 75.00, '2025-07-21 12:30:00', 'SCHEDULED', 'Manicure e pedicure após os cílios.', '2025-07-14 10:05:00');
 
+-- Agendamento para HOJE (ajustei a data para o dia de hoje, para facilitar seus testes no dashboard)
+INSERT INTO tb_appointment (client_id, professional_id, service_id, price, appointment_date, status, observations, created_at) VALUES
+(3, 1, 3, 150.00, '2025-07-16 16:30:00', 'CONFIRMED', 'Tolerância de 10 minutos de atraso.', '2025-07-14 11:00:00');
 
--- =============================================
---  Itens do Agendamento (AppointmentItem)
--- =============================================
--- Item para o agendamento 1 (Passado)
-INSERT INTO tb_appointment_item (appointment_id, service_id, professional_id, price) VALUES
-(1, 1, 1, 50.00); -- Fernanda fez Sobrancelha com a Ana
-
--- Itens para o agendamento 2 (Futuro)
-INSERT INTO tb_appointment_item (appointment_id, service_id, professional_id, price) VALUES
-(2, 2, 2, 180.00), -- Gabriela fará Cílios com a Beatriz
-(2, 4, 3, 70.00);  -- e também Manicure/Pedicure com a Carla
-
--- Item para o agendamento 3 (Hoje)
-INSERT INTO tb_appointment_item (appointment_id, service_id, professional_id, price) VALUES
-(3, 3, 1, 120.00); -- Heloísa fará Corte e Escova com a Ana
+-- Mais um agendamento para HOJE, para a lista ficar mais interessante
+INSERT INTO tb_appointment (client_id, professional_id, service_id, price, appointment_date, status, observations, created_at) VALUES
+(1, 2, 1, 50.00, '2025-07-17 11:00:00', 'SCHEDULED', 'Apenas design.', '2025-07-14 12:00:00');

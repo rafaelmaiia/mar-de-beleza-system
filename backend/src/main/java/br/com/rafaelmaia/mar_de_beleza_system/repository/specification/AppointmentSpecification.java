@@ -1,7 +1,6 @@
 package br.com.rafaelmaia.mar_de_beleza_system.repository.specification;
 
 import br.com.rafaelmaia.mar_de_beleza_system.domain.entity.Appointment;
-import br.com.rafaelmaia.mar_de_beleza_system.domain.entity.AppointmentItem;
 import jakarta.persistence.criteria.Join;
 import org.springframework.data.jpa.domain.Specification;
 import java.time.LocalDate;
@@ -39,10 +38,8 @@ public class AppointmentSpecification {
             if (professionalId == null) {
                 return null; // Ignora o filtro
             }
-            // Faz um JOIN com a lista de services (AppointmentItem)
-            Join<Appointment, AppointmentItem> appointmentItemJoin = root.join("services");
-            // Filtra pelo ID do profissional dentro do item do agendamento
-            return criteriaBuilder.equal(appointmentItemJoin.get("professional").get("id"), professionalId);
+
+            return criteriaBuilder.equal(root.get("professional").get("id"), professionalId);
         };
     }
 

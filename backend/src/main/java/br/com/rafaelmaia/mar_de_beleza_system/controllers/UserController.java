@@ -37,7 +37,7 @@ public class UserController {
         user.setName(request.name());
         user.setEmail(request.email());
         user.setPassword(passwordEncoder.encode(request.password()));
-        // Por padrão, novos usuários criados por aqui são funcionárias (USER)
+        // Por padrão, novos usuarios criados por aqui são funcionárias (USER)
         user.setRole(Role.USER);
 
         appUserRepository.save(user);
