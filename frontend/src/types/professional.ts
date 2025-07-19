@@ -4,4 +4,5 @@ export type Professional = {
   id: number;
   name: string;
   contact: Contact;
+  specialties: string[];
 };

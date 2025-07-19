@@ -10,6 +10,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@hookform/resolvers": "^5.1.1",
     "date-fns": "^4.1.0",
     "date-fns-tz": "^3.2.0",
     "react": "^19.1.0",
@@ -17,6 +18,7 @@
     "react-dom": "^19.1.0",
     "react-hook-form": "^7.60.0",
     "react-hot-toast": "^2.5.2",
+    "react-imask": "^7.6.1",
     "react-modal": "^3.16.3",
     "react-router-dom": "^7.6.3",
     "react-select": "^5.10.2"

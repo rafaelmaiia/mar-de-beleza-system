@@ -73,21 +73,20 @@ export function ServiceManagementPage() {
   
   const handleSaveSuccess = () => {
     setIsModalOpen(false);
-    fetchServices(); // Recarrega a lista após salvar
+    fetchServices();
   }
 
-  // Filtro de busca no frontend
+  // Filtro de busca
   const filteredServices = useMemo(() => {
     return services
-      .filter(s => // <-- FILTRO DE CATEGORIA
+      .filter(s =>
         categoryFilter === 'ALL' || s.serviceType === categoryFilter
       )
-      .filter(s => // <-- FILTRO DE BUSCA (já existia)
+      .filter(s =>
         s.name.toLowerCase().includes(searchTerm.toLowerCase())
       );
-  }, [services, searchTerm, categoryFilter]); // <-- Adiciona a nova dependência
+  }, [services, searchTerm, categoryFilter]);
 
-  // Pega as categorias únicas dos serviços carregados para criar os botões
   const categories = ['ALL', ...new Set(services.map(s => s.serviceType))];
 
   return (
@@ -105,7 +104,7 @@ export function ServiceManagementPage() {
           />
         </div>
 
-        {/* --- NOVOS BOTÕES DE FILTRO --- */}
+        {/* --- BOTÃO DE FILTRO --- */}
         <div className="flex flex-wrap gap-2 mb-6">
           {categories.map(category => (
             <button
@@ -117,7 +116,6 @@ export function ServiceManagementPage() {
                 : 'bg-gray-200 text-gray-700'
               }`}
             >
-              {/* Traduz o nome da categoria para o botão */}
               {category === 'ALL' ? 'Todos' : serviceTypeTranslations[category] || category}
             </button>
           ))}
@@ -130,7 +128,7 @@ export function ServiceManagementPage() {
               key={service.id}
               service={service}
               onEdit={() => handleOpenEditModal(service)}
-              onDelete={() => handleDeleteService(service.id)} // <-- LIGANDO A NOVA FUNÇÃO
+              onDelete={() => handleDeleteService(service.id)}
             />
           ))}
         </div>
