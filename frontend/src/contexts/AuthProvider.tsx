@@ -1,17 +1,38 @@
-import { createContext, useState, useContext, ReactNode, useEffect } from 'react';
+import { useState, ReactNode, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { AuthContext, AuthContextType } from './AuthContext';
+import { AuthContext, AuthUser } from './AuthContext';
 import type { AuthRequest } from '../dtos/AuthRequest';
+
+
+const decodeToken = (token: string): { sub: string, fullName: string, userId: number, role: string } | null => {
+  try {
+    return JSON.parse(atob(token.split('.')[1]));
+  } catch (error) {
+    return null;
+  }
+};
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [token, setToken] = useState<string | null>(localStorage.getItem('accessToken'));
+  const [user, setUser] = useState<AuthUser | null>(null);
+  
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!token) {
-      localStorage.removeItem('accessToken');
+    const localToken = localStorage.getItem('accessToken');
+    if (localToken) {
+      const decoded = decodeToken(localToken);
+      if (decoded) {
+        setUser({ 
+          id: decoded.userId, 
+          name: decoded.fullName, 
+          email: decoded.sub, 
+          role: decoded.role 
+        });
+      }
+      setToken(localToken);
     }
-  }, [token]);
+  }, []);
 
   const login = async (data: AuthRequest) => {
     const response = await fetch('http://localhost:8080/api/v1/auth/login', {
@@ -26,23 +47,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     const responseData = await response.json();
-    localStorage.setItem('accessToken', responseData.token);
-    setToken(responseData.token);
+    const newToken = responseData.token;
+    localStorage.setItem('accessToken', newToken);
+    
+    const decoded = decodeToken(newToken);
+    if (decoded) {
+      setUser({ 
+        id: decoded.userId, 
+        name: decoded.fullName, 
+        email: decoded.sub, 
+        role: decoded.role 
+      });
+    }
+    setToken(newToken);
     navigate('/dashboard');
   };
 
   const logout = () => {
     localStorage.removeItem('accessToken');
     setToken(null);
+    setUser(null);
     navigate('/login');
   };
 
-  const value = {
-    isAuthenticated: !!token,
-    token,
-    login,
-    logout,
-  };
+  const value = { isAuthenticated: !!token, token, user, login, logout };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

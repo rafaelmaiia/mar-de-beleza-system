@@ -1,9 +1,21 @@
 import { createContext } from 'react';
+import type { AuthRequest } from '../dtos/AuthRequest';
+import type { Contact } from '../types/contact';
+
+export type AuthUser = {
+  id: number;
+  name: string;
+  email: string;
+  role: string;
+  contact?: Contact | null;
+  specialties?: string[];
+};
 
 export type AuthContextType = {
   isAuthenticated: boolean;
   token: string | null;
-  login: (data: any) => Promise<void>; // Usando 'any' por enquanto
+  user: AuthUser | null;
+  login: (data: AuthRequest) => Promise<void>;
   logout: () => void;
 };
 
