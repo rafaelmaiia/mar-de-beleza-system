@@ -24,11 +24,13 @@ public class SalonServiceController implements SalonServiceControllerDocs {
     private final SalonServiceService service;
 
     @GetMapping("/{id}")
+    @PreAuthorize("isAuthenticated()") // Qualquer um logado pode ver um serviço
     public ResponseEntity<SalonServiceResponseDTO> findById(@PathVariable Long id) {
         return ResponseEntity.ok(service.findServiceById(id));
     }
 
     @GetMapping
+    @PreAuthorize("isAuthenticated()") // Qualquer um logado pode ver a lista
     public ResponseEntity<List<SalonServiceResponseDTO>> findAll() {
         return ResponseEntity.ok(service.findAllServices());
     }
@@ -43,13 +45,13 @@ public class SalonServiceController implements SalonServiceControllerDocs {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')") // APENAS ADMIN pode atualizar
     public ResponseEntity<SalonServiceResponseDTO> update(@PathVariable Long id, @RequestBody @Valid SalonServiceRequestDTO requestDTO) {
         return ResponseEntity.ok(service.updateService(id, requestDTO));
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')") // APENAS ADMIN pode deletar
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         service.deleteService(id);
         return ResponseEntity.noContent().build();
