@@ -1,8 +1,8 @@
 package br.com.rafaelmaia.mar_de_beleza_system.security.service;
 
-import br.com.rafaelmaia.mar_de_beleza_system.repository.AppUserRepository;
+import br.com.rafaelmaia.mar_de_beleza_system.repository.SystemUserRepository;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import br.com.rafaelmaia.mar_de_beleza_system.domain.entity.AppUser;
+import br.com.rafaelmaia.mar_de_beleza_system.domain.entity.SystemUser;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -14,21 +14,17 @@ import java.util.List;
 @Service
 public class UserDetailsServiceImpl implements UserDetailsService {
 
-    private final AppUserRepository repository;
+    private final SystemUserRepository repository;
 
-    public UserDetailsServiceImpl(AppUserRepository repository) {
+    public UserDetailsServiceImpl(SystemUserRepository repository) {
         this.repository = repository;
     }
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        AppUser user = repository.findByEmail(username)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+        SystemUser user = repository.findByEmail(username)
+                .orElseThrow(() -> new UsernameNotFoundException("Usuário não encontrado com email: " + username));
 
-        return new User(
-                user.getEmail(),
-                user.getPassword(),
-                List.of(new SimpleGrantedAuthority("ROLE_" + user.getRole().name()))
-        );
+        return user;
     }
 }

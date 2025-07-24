@@ -2,8 +2,7 @@ package br.com.rafaelmaia.mar_de_beleza_system.controllers;
 
 import br.com.rafaelmaia.mar_de_beleza_system.dto.AuthRequest;
 import br.com.rafaelmaia.mar_de_beleza_system.dto.AuthResponse;
-import br.com.rafaelmaia.mar_de_beleza_system.repository.AppUserRepository;
-import br.com.rafaelmaia.mar_de_beleza_system.security.SecurityUtils;
+import br.com.rafaelmaia.mar_de_beleza_system.repository.SystemUserRepository;
 import br.com.rafaelmaia.mar_de_beleza_system.security.jwt.JwtService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
@@ -23,14 +22,14 @@ public class AuthController {
 
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
-    private final AppUserRepository appUserRepository;
+    private final SystemUserRepository systemUserRepository;
     private final PasswordEncoder passwordEncoder;
 
     public AuthController(AuthenticationManager authenticationManager, JwtService jwtService,
-                          AppUserRepository userRepository, PasswordEncoder passwordEncoder) {
+                          SystemUserRepository userRepository, PasswordEncoder passwordEncoder) {
         this.authenticationManager = authenticationManager;
         this.jwtService = jwtService;
-        this.appUserRepository = userRepository;
+        this.systemUserRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -40,7 +39,7 @@ public class AuthController {
                 new UsernamePasswordAuthenticationToken(request.email(), request.password())
         );
 
-        var user = appUserRepository.findByEmail(request.email())
+        var user = systemUserRepository.findByEmail(request.email())
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
         String token = jwtService.generateToken(user);

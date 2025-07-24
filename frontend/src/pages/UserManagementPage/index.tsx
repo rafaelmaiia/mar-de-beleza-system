@@ -1,33 +1,34 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '../../hooks/useAuth';
-import type { Professional } from '../../types/professional';
+import type { SystemUser } from '../../types/user.ts';
 import { Header } from '../../components/Header';
-import { ProfessionalCard } from '../../components/ProfessionalCard';
-import { ProfessionalModal } from '../../components/ProfessionalModal';
+import { UserCard } from '../../components/UserCard';
+import { UserModal } from '../../components/UserModal';
 import { serviceTypeTranslations } from '../../constants/serviceConstants'; 
 import toast from 'react-hot-toast';
 
-export function ProfessionalManagementPage() {
+export function UserManagementPage() {
   const { token } = useAuth();
-  const [professionals, setProfessionals] = useState<Professional[]>([]);
+
+  const [users, setUsers] = useState<SystemUser[]>([]); 
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [professionalToEdit, setProfessionalToEdit] = useState<Professional | null>(null);
+  const [userToEdit, setUserToEdit] = useState<SystemUser | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [specialtyFilter, setSpecialtyFilter] = useState<string>('ALL');
 
-  const fetchProfessionals = async () => {
+  const fetchUsers = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch('http://localhost:8080/api/v1/professionals', {
+      const response = await fetch('http://localhost:8080/api/v1/users', { 
         headers: { 'Authorization': `Bearer ${token}` }
       });
-      if (!response.ok) throw new Error('Falha ao buscar profissionais.');
+      if (!response.ok) throw new Error('Falha ao buscar usuários.');
       const data = await response.json();
-      setProfessionals(data.content || data);
+      setUsers(data || []);
     } catch (error) {
       console.error(error);
-      toast.error('Não foi possível carregar os profissionais.');
+      toast.error('Não foi possível carregar os usuários.');
     } finally {
       setIsLoading(false);
     }
@@ -35,35 +36,35 @@ export function ProfessionalManagementPage() {
 
   useEffect(() => {
     if (token) {
-      fetchProfessionals();
+      fetchUsers();
     }
   }, [token]);
 
   const handleOpenCreateModal = () => {
-    setProfessionalToEdit(null);
+    setUserToEdit(null);
     setIsModalOpen(true);
   };
 
-  const handleOpenEditModal = (professional: Professional) => {
-    setProfessionalToEdit(professional);
+  const handleOpenEditModal = (user: SystemUser) => {
+    setUserToEdit(user);
     setIsModalOpen(true);
   };
   
   const handleSaveSuccess = () => {
     setIsModalOpen(false);
-    fetchProfessionals();
+    fetchUsers();
   };
 
-  const handleDeleteProfessional = async (professionalId: number) => {
-    if (window.confirm('Tem certeza que deseja excluir este profissional?')) {
+  const handleDeleteUser = async (userId: number) => {
+    if (window.confirm('Tem certeza que deseja excluir este usuário?')) {
       try {
-        const response = await fetch(`http://localhost:8080/api/v1/professionals/${professionalId}`, {
+        const response = await fetch(`http://localhost:8080/api/v1/users/${userId}`, {
           method: 'DELETE',
           headers: { 'Authorization': `Bearer ${token}` },
         });
-        if (!response.ok) throw new Error('Falha ao deletar profissional.');
-        toast.success('Profissional deletado com sucesso!');
-        fetchProfessionals();
+        if (!response.ok) throw new Error('Falha ao deletar usuário.');
+        toast.success('Usuário deletado com sucesso!');
+        fetchUsers();
       } catch (error: any) {
         toast.error(error.message);
       }
@@ -72,31 +73,27 @@ export function ProfessionalManagementPage() {
 
   const availableSpecialties = useMemo(() => {
     const allSpecialties = new Set<string>();
-    professionals.forEach(p => {
+    users.forEach(p => {
       p.specialties.forEach(s => allSpecialties.add(s));
     });
     return ['ALL', ...Array.from(allSpecialties)];
-  }, [professionals]);
+  }, [users]);
 
-  const filteredProfessionals = useMemo(() => {
-    return professionals
-      .filter(p => // Filtro de especialidade
-        specialtyFilter === 'ALL' || p.specialties.includes(specialtyFilter)
-      )
-      .filter(p => // Filtro de busca por nome
-        p.name.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-  }, [professionals, searchTerm, specialtyFilter]); //
+  const filteredUsers = useMemo(() => {
+    return users
+      .filter(u => specialtyFilter === 'ALL' || u.specialties.includes(specialtyFilter))
+      .filter(u => u.name.toLowerCase().includes(searchTerm.toLowerCase()));
+  }, [users, searchTerm, specialtyFilter]);
 
   return (
     <div className="bg-gray-50 min-h-screen">
-      <Header title="Profissionais" />
+      <Header title="Usuários" />
 
       <main className="pt-20 pb-24 px-4 max-w-4xl mx-auto">
         <div className="mb-6">
           <input 
             type="text" 
-            placeholder="Buscar profissional por nome..." 
+            placeholder="Buscar usuário por nome..." 
             className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
             value={searchTerm}
             onChange={e => setSearchTerm(e.target.value)}
@@ -121,13 +118,13 @@ export function ProfessionalManagementPage() {
         </div>
 
         <div className="space-y-4">
-          {isLoading && <p>Carregando profissionais...</p>}
-          {!isLoading && filteredProfessionals.map(prof => (
-            <ProfessionalCard 
-              key={prof.id}
-              professional={prof}
-              onEdit={() => handleOpenEditModal(prof)}
-              onDelete={() => handleDeleteProfessional(prof.id)}
+          {isLoading && <p>Carregando usuários...</p>}
+           {!isLoading && filteredUsers.map(user => (
+            <UserCard 
+              key={user.id}
+              user={user}
+              onEdit={() => handleOpenEditModal(user)}
+              onDelete={() => handleDeleteUser(user.id)}
             />
           ))}
         </div>
@@ -135,14 +132,14 @@ export function ProfessionalManagementPage() {
 
       <button onClick={handleOpenCreateModal} className="fixed bottom-6 right-6 bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-4 rounded-full shadow-lg flex items-center gap-2 transition-transform transform hover:scale-110 z-50">
         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
-        <span className="hidden sm:inline">Nova Profissional</span>
+        <span className="hidden sm:inline">Novo Usuário</span>
       </button>
 
-      <ProfessionalModal
+      <UserModal
         isOpen={isModalOpen}
         onRequestClose={() => setIsModalOpen(false)}
         onSaveSuccess={handleSaveSuccess}
-        professionalToEdit={professionalToEdit}
+        userToEdit={userToEdit}
       />
     </div>
   );

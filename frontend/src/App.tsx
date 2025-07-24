@@ -4,7 +4,7 @@ import { LoginPage } from './pages/LoginPage';
 import { DashboardPage } from './pages/DashboardPage';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { ServiceManagementPage } from './pages/ServiceManagementPage';
-import { ProfessionalManagementPage } from './pages/ProfessionalManagementPage';
+import { UserManagementPage } from './pages/UserManagementPage';
 import { ClientManagementPage } from './pages/ClientManagementPage';
 
 function App() {
@@ -48,10 +48,10 @@ function App() {
         } 
         />
         <Route 
-        path="/professionals"
+        path="/users"
         element={
           <ProtectedRoute>
-            <ProfessionalManagementPage />
+            <UserManagementPage />
           </ProtectedRoute>
         } 
         />

@@ -87,7 +87,7 @@ export function Header({ title }: HeaderProps) {
               <div className="py-1" role="none">
                 <Link to="/dashboard" className="text-gray-700 block px-4 py-2 text-sm hover:bg-gray-100" role="menuitem">Gerenciar Agendamentos</Link>
                 <Link to="/clients" className="text-gray-700 block px-4 py-2 text-sm hover:bg-gray-100" role="menuitem">Gerenciar Clientes</Link>
-                <Link to="/professionals" className="text-gray-700 block px-4 py-2 text-sm hover:bg-gray-100" role="menuitem">Gerenciar Profissionais</Link>
+                <Link to="/users" className="text-gray-700 block px-4 py-2 text-sm hover:bg-gray-100" role="menuitem">Gerenciar Usuárias</Link>
                 <Link to="/services" className="text-gray-700 block px-4 py-2 text-sm hover:bg-gray-100" role="menuitem">Gerenciar Serviços</Link>
                 <Link to="/settings" className="text-gray-700 block px-4 py-2 text-sm hover:bg-gray-100 border-t border-gray-100 mt-1 pt-2" role="menuitem">Configurações</Link>
               </div>

@@ -5,14 +5,12 @@ import br.com.rafaelmaia.mar_de_beleza_system.domain.enums.AppointmentStatus;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.stream.Collectors;
 
 public record AppointmentResponseDTO(
         Long id,
         ClientResponseDTO client,
         SalonServiceResponseDTO service,
-        ProfessionalResponseDTO professional,
+        UserResponseDTO professional,
         LocalDateTime appointmentDate,
         AppointmentStatus status,
         String observations,
@@ -28,7 +26,7 @@ public record AppointmentResponseDTO(
             appointment.getId(),
             ClientResponseDTO.fromEntity(appointment.getClient()),
             SalonServiceResponseDTO.fromEntity(appointment.getService()),
-            ProfessionalResponseDTO.fromEntity(appointment.getProfessional()),
+            UserResponseDTO.fromEntity(appointment.getProfessional()),
             appointment.getAppointmentDate(),
             appointment.getStatus(),
             appointment.getObservations(),

@@ -2,16 +2,16 @@ package br.com.rafaelmaia.mar_de_beleza_system.services.impl;
 
 import br.com.rafaelmaia.mar_de_beleza_system.domain.entity.Appointment;
 import br.com.rafaelmaia.mar_de_beleza_system.domain.entity.Client;
-import br.com.rafaelmaia.mar_de_beleza_system.domain.entity.Professional;
 import br.com.rafaelmaia.mar_de_beleza_system.domain.entity.SalonService;
+import br.com.rafaelmaia.mar_de_beleza_system.domain.entity.SystemUser;
 import br.com.rafaelmaia.mar_de_beleza_system.domain.enums.AppointmentStatus;
 import br.com.rafaelmaia.mar_de_beleza_system.dto.AppointmentRequestDTO;
 import br.com.rafaelmaia.mar_de_beleza_system.dto.AppointmentResponseDTO;
 import br.com.rafaelmaia.mar_de_beleza_system.dto.StatusUpdateRequestDTO;
 import br.com.rafaelmaia.mar_de_beleza_system.repository.AppointmentRepository;
 import br.com.rafaelmaia.mar_de_beleza_system.repository.ClientRepository;
-import br.com.rafaelmaia.mar_de_beleza_system.repository.ProfessionalRepository;
 import br.com.rafaelmaia.mar_de_beleza_system.repository.SalonServiceRepository;
+import br.com.rafaelmaia.mar_de_beleza_system.repository.SystemUserRepository;
 import br.com.rafaelmaia.mar_de_beleza_system.repository.specification.AppointmentSpecification;
 import br.com.rafaelmaia.mar_de_beleza_system.services.AppointmentService;
 import br.com.rafaelmaia.mar_de_beleza_system.services.exceptions.BusinessRuleException;
@@ -39,7 +39,7 @@ public class AppointmentServiceImpl implements AppointmentService {
 
     private final ClientRepository clientRepository;
 
-    private final ProfessionalRepository professionalRepository;
+    private final SystemUserRepository systemUserRepository;
 
     private final SalonServiceRepository salonServiceRepository;
 
@@ -71,7 +71,7 @@ public class AppointmentServiceImpl implements AppointmentService {
         Client client = clientRepository.findById(request.clientId())
                 .orElseThrow(() -> new ObjectNotFoundException("Cliente não encontrado com id " + request.clientId()));
 
-        Professional professional = professionalRepository.findById(request.professionalId())
+        SystemUser professional = systemUserRepository.findById(request.professionalId())
                 .orElseThrow(() -> new ObjectNotFoundException("Profissional não encontrado com id " + request.professionalId()));
 
         SalonService service = salonServiceRepository.findById(request.salonServiceId())
@@ -133,7 +133,7 @@ public class AppointmentServiceImpl implements AppointmentService {
         // 2. Busca as entidades que podem ter sido alteradas na requisição
         Client client = clientRepository.findById(request.clientId())
                 .orElseThrow(() -> new ObjectNotFoundException("Cliente não encontrado com id " + request.clientId()));
-        Professional professional = professionalRepository.findById(request.professionalId())
+        SystemUser professional = systemUserRepository.findById(request.professionalId())
                 .orElseThrow(() -> new ObjectNotFoundException("Profissional não encontrado com id " + request.professionalId()));
         SalonService service = salonServiceRepository.findById(request.salonServiceId())
                 .orElseThrow(() -> new ObjectNotFoundException("Serviço não encontrado com id " + request.salonServiceId()));

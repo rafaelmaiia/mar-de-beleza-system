@@ -5,7 +5,7 @@ import { useForm, SubmitHandler } from 'react-hook-form';
 import { useEffect } from 'react';
 import toast from 'react-hot-toast';
 import { useAuth } from '../../hooks/useAuth';
-import type { Professional } from '../../types/professional';
+import type { SystemUser } from '../../types/user';
 import { serviceTypeTranslations } from '../../constants/serviceConstants';
 
 const customStyles = {
@@ -25,39 +25,49 @@ Modal.setAppElement('#root');
 
 type FormData = {
   name: string;
+  email: string;
+  password?: string; // Senha é opcional na edição
+  role: string;
   phone: string;
   phoneIsWhatsapp: boolean;
   specialties: string[];
-}
+};
 
-type ProfessionalModalProps = {
+type UserModalProps = {
   isOpen: boolean;
   onRequestClose: () => void;
   onSaveSuccess: () => void;
-  professionalToEdit: Professional | null;
+  userToEdit: SystemUser | null;
 };
 
 const specialtyOptions = Object.keys(serviceTypeTranslations);
 
-export function ProfessionalModal({ isOpen, onRequestClose, onSaveSuccess, professionalToEdit }: ProfessionalModalProps) {
+export function UserModal({ isOpen, onRequestClose, onSaveSuccess, userToEdit }: UserModalProps) {
   const { register, handleSubmit, reset, setValue, control, formState: { errors } } = useForm<FormData>();
   const { token } = useAuth();
 
   useEffect(() => {
-    if (professionalToEdit) {
-      setValue('name', professionalToEdit.name);
-      setValue('phone', professionalToEdit.contact.phone);
-      setValue('phoneIsWhatsapp', professionalToEdit.contact.phoneIsWhatsapp);
-      setValue('specialties', professionalToEdit.specialties);
+    // Preenche o formulário se estivermos no modo de edição
+    if (userToEdit) {
+      setValue('name', userToEdit.name);
+      setValue('email', userToEdit.email);
+      setValue('role', userToEdit.role);
+      setValue('phone', userToEdit.contact?.phone || '');
+      setValue('phoneIsWhatsapp', userToEdit.contact?.phoneIsWhatsapp || false);
+      setValue('specialties', userToEdit.specialties || []);
     } else {
-      reset({ name: '', phone: '', phoneIsWhatsapp: true, specialties: [] });
+      // Limpa o formulário para um novo usuário, definindo padrões
+      reset({ name: '', email: '', password: '', role: 'STAFF', phone: '', phoneIsWhatsapp: true, specialties: [] });
     }
-  }, [professionalToEdit, isOpen, reset, setValue]);
+  }, [userToEdit, isOpen, reset, setValue]);
 
   const onSubmit: SubmitHandler<FormData> = async (data) => {
-    // Monta payload para a API
+    // Monta o payload para a API (UserRequestDTO)
     const apiPayload = {
         name: data.name,
+        email: data.email,
+        password: data.password,
+        role: data.role,
         contact: {
             phone: data.phone,
             phoneIsWhatsapp: data.phoneIsWhatsapp
@@ -65,10 +75,15 @@ export function ProfessionalModal({ isOpen, onRequestClose, onSaveSuccess, profe
         specialties: data.specialties
     };
 
-    const method = professionalToEdit ? 'PUT' : 'POST';
-    const url = professionalToEdit
-      ? `http://localhost:8080/api/v1/professionals/${professionalToEdit.id}`
-      : `http://localhost:8080/api/v1/professionals`;
+    // Remove a senha do payload se estiver vazia (para não sobrescrever com vazio na edição)
+    if (!apiPayload.password) {
+        delete (apiPayload as Partial<typeof apiPayload>).password;
+    }
+
+    const method = userToEdit ? 'PUT' : 'POST';
+    const url = userToEdit
+      ? `http://localhost:8080/api/v1/users/${userToEdit.id}`
+      : `http://localhost:8080/api/v1/users`;
 
     try {
       const response = await fetch(url, {
@@ -76,9 +91,9 @@ export function ProfessionalModal({ isOpen, onRequestClose, onSaveSuccess, profe
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify(apiPayload)
       });
-      if (!response.ok) throw new Error('Falha ao salvar profissional.');
+      if (!response.ok) throw new Error('Falha ao salvar usuário.');
       
-      toast.success(`Profissional ${professionalToEdit ? 'atualizado' : 'criado'} com sucesso!`);
+      toast.success(`Usuário ${userToEdit ? 'atualizado' : 'criado'} com sucesso!`);
       onSaveSuccess();
     } catch (error: any) {
       toast.error(error.message);
@@ -88,15 +103,32 @@ export function ProfessionalModal({ isOpen, onRequestClose, onSaveSuccess, profe
   return (
     <Modal isOpen={isOpen} onRequestClose={onRequestClose} style={customStyles}>
       <div className="bg-white rounded-lg shadow-xl p-6 w-11/12 max-w-lg">
-        <h3 className="text-xl font-semibold mb-4">{professionalToEdit ? 'Editar Profissional' : 'Novo Profissional'}</h3>
+        <h3 className="text-xl font-semibold mb-4">{userToEdit ? 'Editar Usuário' : 'Novo Usuário'}</h3>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Nome</label>
-            <input {...register("name", { required: true })} className="mt-1 block w-full border-gray-300 rounded-md shadow-sm" />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label htmlFor="name" className="block text-sm font-medium text-gray-700">Nome</label>
+              <input id="name" {...register("name", { required: true })} className="mt-1 block w-full border-gray-300 rounded-md shadow-sm" />
+            </div>
+            <div>
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email</label>
+              <input id="email" type="email" {...register("email", { required: true })} className="mt-1 block w-full border-gray-300 rounded-md shadow-sm" />
+            </div>
+            <div>
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700">Senha</label>
+              <input id="password" type="password" {...register("password")} placeholder={userToEdit ? "Deixe em branco para não alterar" : ""} className="mt-1 block w-full border-gray-300 rounded-md shadow-sm" />
+            </div>
+            <div>
+              <label htmlFor="role" className="block text-sm font-medium text-gray-700">Perfil</label>
+              <select id="role" {...register("role")} className="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+                  <option value="STAFF">Funcionária</option>
+                  <option value="ADMIN">Admin</option>
+              </select>
+            </div>
           </div>
-
-          {/* --- CAMPO DE TELEFONE COM MASCARA 'react-imask' --- */}
+          
+          {/* --- CAMPO DE TELEFONE --- */}
           <div>
             <label htmlFor="phone" className="block text-sm font-medium text-gray-700">Telefone</label>
             <Controller
@@ -105,8 +137,8 @@ export function ProfessionalModal({ isOpen, onRequestClose, onSaveSuccess, profe
               rules={{ 
                 required: "O telefone é obrigatório",
                 pattern: {
-                  value: /^\d{10,11}$/, // Valida se o campo tem entre 10 e 11 NÚMEROS
-                  message: "O telefone deve ter 10 ou 11 dígitos (DDD + número)."
+                  value: /^\d{10,11}$/,
+                  message: "O telefone deve ter 10 ou 11 dígitos."
                 }
               }}
               render={({ field }) => (
@@ -121,28 +153,19 @@ export function ProfessionalModal({ isOpen, onRequestClose, onSaveSuccess, profe
             />
             {errors.phone && <p className="text-red-500 text-xs mt-1">{errors.phone.message}</p>}
           </div>
-          {/* --- FIM DO CAMPO DE TELEFONE --- */}
-
           <div className="flex items-center">
             <input type="checkbox" {...register("phoneIsWhatsapp")} className="h-4 w-4 rounded" />
             <label className="ml-2 block text-sm text-gray-900">Este número é WhatsApp</label>
           </div>
+          {/* --- FIM DO CAMPO DE TELEFONE --- */}
           
           <div>
             <label className="block text-sm font-medium text-gray-700">Especialidades</label>
-            <div className="mt-2 grid grid-cols-2 gap-2">
+            <div className="mt-2 grid grid-cols-2 sm:grid-cols-3 gap-2">
                 {specialtyOptions.map(specialtyKey => (
                     <div key={specialtyKey} className="flex items-center">
-                        <input 
-                            type="checkbox" 
-                            id={specialtyKey}
-                            value={specialtyKey}
-                            {...register("specialties")}
-                            className="h-4 w-4 rounded"
-                        />
-                        <label htmlFor={specialtyKey} className="ml-2 block text-sm text-gray-900">
-                            {serviceTypeTranslations[specialtyKey]}
-                        </label>
+                        <input type="checkbox" id={specialtyKey} value={specialtyKey} {...register("specialties")} className="h-4 w-4 rounded"/>
+                        <label htmlFor={specialtyKey} className="ml-2 block text-sm text-gray-900">{serviceTypeTranslations[specialtyKey]}</label>
                     </div>
                 ))}
             </div>

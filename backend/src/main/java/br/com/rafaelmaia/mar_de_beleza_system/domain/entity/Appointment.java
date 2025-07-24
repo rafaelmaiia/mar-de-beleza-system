@@ -31,7 +31,7 @@ public class Appointment implements Serializable {
 
     @ManyToOne
     @JoinColumn(name = "professional_id", nullable = false)
-    private Professional professional;
+    private SystemUser professional;
 
     @ManyToOne
     @JoinColumn(name = "service_id", nullable = false)

@@ -1,5 +1,4 @@
-// src/types/appointment.ts
-import type { Professional } from './professional';
+import type { SystemUser } from './user.ts';
 import type { Client } from './client';
 import type { SalonService } from './salonService';
 
@@ -10,6 +9,6 @@ export type Appointment = {
   observations?: string;
   price: number;
   client: Client;
-  professional: Professional;
+  professional: SystemUser;
   service: SalonService;
 };

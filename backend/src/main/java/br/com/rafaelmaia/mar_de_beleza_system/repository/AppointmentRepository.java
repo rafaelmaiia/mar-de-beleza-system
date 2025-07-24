@@ -20,4 +20,6 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long>,
     List<Appointment> findPotentialConflicts(Long professionalId, LocalDateTime startOfDay, LocalDateTime endOfDay);
 
     boolean existsByServiceId(Long serviceId);
+
+    boolean existsByProfessionalId(Long professionalId);
 }

@@ -1,6 +1,6 @@
 package br.com.rafaelmaia.mar_de_beleza_system.security.jwt;
 
-import br.com.rafaelmaia.mar_de_beleza_system.domain.entity.AppUser;
+import br.com.rafaelmaia.mar_de_beleza_system.domain.entity.SystemUser;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import org.springframework.beans.factory.annotation.Value;
@@ -19,7 +19,7 @@ public class JwtService {
 
     private final long expiration = 86400000; // 1 dia em milissegundos
 
-    public String generateToken(AppUser user) {
+    public String generateToken(SystemUser user) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("fullName", user.getName());
         claims.put("role", user.getRole().name());

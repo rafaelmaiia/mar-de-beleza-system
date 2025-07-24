@@ -2,14 +2,12 @@ package br.com.rafaelmaia.mar_de_beleza_system.services.impl;
 
 import br.com.rafaelmaia.mar_de_beleza_system.domain.entity.Appointment;
 import br.com.rafaelmaia.mar_de_beleza_system.domain.entity.Client;
-import br.com.rafaelmaia.mar_de_beleza_system.domain.entity.Professional;
 import br.com.rafaelmaia.mar_de_beleza_system.domain.entity.SalonService;
 import br.com.rafaelmaia.mar_de_beleza_system.domain.enums.AppointmentStatus;
 import br.com.rafaelmaia.mar_de_beleza_system.dto.AppointmentRequestDTO;
 import br.com.rafaelmaia.mar_de_beleza_system.dto.AppointmentResponseDTO;
 import br.com.rafaelmaia.mar_de_beleza_system.repository.AppointmentRepository;
 import br.com.rafaelmaia.mar_de_beleza_system.repository.ClientRepository;
-import br.com.rafaelmaia.mar_de_beleza_system.repository.ProfessionalRepository;
 import br.com.rafaelmaia.mar_de_beleza_system.repository.SalonServiceRepository;
 import br.com.rafaelmaia.mar_de_beleza_system.services.exceptions.BusinessRuleException;
 import org.junit.jupiter.api.BeforeEach;
