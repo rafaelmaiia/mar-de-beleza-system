@@ -55,11 +55,11 @@ export function AppointmentModal({ isOpen, onRequestClose, onSaveSuccess, select
   
   // Estado para o profissional atualmente selecionado (para o filtro em cascata)
   const [selectedProfessional, setSelectedProfessional] = useState<SystemUser | null>(null);
-  
   const [areOptionsLoading, setAreOptionsLoading] = useState(true);
 
   const { register, handleSubmit, control, reset, setValue, formState: { errors } } = useForm<FormData>();
   
+  // EFEITO 1: Responsável APENAS por buscar os dados das listas
   useEffect(() => {
     if (isOpen) {
       setAreOptionsLoading(true);
@@ -100,21 +100,24 @@ export function AppointmentModal({ isOpen, onRequestClose, onSaveSuccess, select
     }
   }, [isOpen]);
 
+  // EFEITO 2: Responsável por preencher o formulário (EXCETO o serviço) e definir o profissional -> corrige timing de serviço não sendo definido corretamente no modo de edição
   useEffect(() => {
     if (isOpen && !areOptionsLoading) {
       if (appointmentToEdit) {
         // MODO EDITAR
-        const professional = allProfessionals.find(p => p.id === appointmentToEdit.professional.id);
-        setSelectedProfessional(professional || null);
+        // Encontra e define o profissional selecionado. Isso vai disparar o useMemo.
+        const professionalToSet = allProfessionals.find(p => p.id === appointmentToEdit.professional.id);
+        setSelectedProfessional(professionalToSet || null);
 
+        // Preenche todos os outros campos
         setValue('clientId', { value: appointmentToEdit.client.id, label: appointmentToEdit.client.name });
-        setValue('professionalId', professional ? { value: professional.id, label: professional.name } : null);
-        setValue('serviceId', appointmentToEdit.service.id);
+        setValue('professionalId', professionalToSet ? { value: professionalToSet.id, label: professionalToSet.name } : null);
         setValue('appointmentTime', format(new Date(appointmentToEdit.appointmentDate), 'HH:mm'));
         setValue('price', appointmentToEdit.price);
         setValue('observations', appointmentToEdit.observations || '');
       } else {
         // MODO CRIAR
+        console.log("Modo Criação: Resetando o formulário.");
         setSelectedProfessional(null);
         reset({
           clientId: null,
@@ -135,6 +138,19 @@ export function AppointmentModal({ isOpen, onRequestClose, onSaveSuccess, select
       selectedProfessional.specialties.includes(service.serviceType)
     );
   }, [selectedProfessional, allServices]);
+
+  // EFEITO 3: Responsável APENAS por definir o serviço
+  useEffect(() => {
+    // Ele só roda DEPOIS que 'availableServices' foi recalculada
+    // E só no modo de edição.
+    if (appointmentToEdit && availableServices.length > 0) {
+      // Verifica se o serviço do agendamento realmente existe na lista de serviços disponíveis
+      const serviceExistsInList = availableServices.some(s => s.id === appointmentToEdit.service.id);
+      if (serviceExistsInList) {
+        setValue('serviceId', appointmentToEdit.service.id);
+      }
+    }
+  }, [availableServices, appointmentToEdit, setValue]);
 
   const onSubmit: SubmitHandler<FormData> = async (formData) => {
     const datePart = format(selectedDate, 'yyyy-MM-dd');
