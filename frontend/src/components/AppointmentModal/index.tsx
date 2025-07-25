@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import Modal from 'react-modal';
 import { useForm, Controller, SubmitHandler } from 'react-hook-form';
 import Select from 'react-select';
@@ -45,59 +45,96 @@ Modal.setAppElement('#root');
 export function AppointmentModal({ isOpen, onRequestClose, onSaveSuccess, selectedDate, appointmentToEdit }: AppointmentModalProps) {
   const { token } = useAuth();
 
+  // Estados para as opções dos selects
   const [clientOptions, setClientOptions] = useState<{ value: number; label: string }[]>([]);
   const [professionalOptions, setProfessionalOptions] = useState<{ value: number; label: string }[]>([]);
-  const [serviceOptions, setServiceOptions] = useState<SalonService[]>([]);
   
+  // Estados para as listas completas de dados
+  const [allProfessionals, setAllProfessionals] = useState<SystemUser[]>([]);
+  const [allServices, setAllServices] = useState<SalonService[]>([]);
+  
+  // Estado para o profissional atualmente selecionado (para o filtro em cascata)
+  const [selectedProfessional, setSelectedProfessional] = useState<SystemUser | null>(null);
+  
+  const [areOptionsLoading, setAreOptionsLoading] = useState(true);
+
   const { register, handleSubmit, control, reset, setValue, formState: { errors } } = useForm<FormData>();
   
   useEffect(() => {
     if (isOpen) {
+      setAreOptionsLoading(true);
+      const token = localStorage.getItem('accessToken');
       if (!token) {
         toast.error("Usuário não autenticado.");
+        setAreOptionsLoading(false);
         return;
       }
       const headers = { 'Authorization': `Bearer ${token}` };
 
-      // Prepara as três buscas
-      const fetchClients = fetch('http://localhost:8080/api/v1/clients', { headers })
-        .then(res => res.json())
-        .then(data => (data.content || data).map((c: Client) => ({ value: c.id, label: c.name })));
+      // Preparamos as "promessas" de busca
+      const fetchClientsPromise = fetch('http://localhost:8080/api/v1/clients', { headers }).then(res => res.json());
+      const fetchProfessionalsPromise = fetch('http://localhost:8080/api/v1/users?canBeScheduled=true', { headers }).then(res => res.json());
+      const fetchServicesPromise = fetch('http://localhost:8080/api/v1/salonServices', { headers }).then(res => res.json());
 
-      const fetchProfessionals = fetch('http://localhost:8080/api/v1/users', { headers })
-        .then(res => res.json())
-        .then(data => (data || []).map((p: SystemUser) => ({ value: p.id, label: p.name })));
+      //Promise.all para esperar que TODAS as buscas terminem
+      Promise.all([fetchClientsPromise, fetchProfessionalsPromise, fetchServicesPromise])
+        .then(([clientData, professionalData, serviceData]) => {
+          const clients = clientData.content || clientData;
+          const professionals = professionalData || [];
+          const services = serviceData.content || serviceData;
 
-      const fetchServices = fetch('http://localhost:8080/api/v1/salonServices', { headers })
-        .then(res => res.json())
-        .then(data => data.content || data);
-
-      // Promise.all para esperar que TODAS as buscas terminem
-      Promise.all([fetchClients, fetchProfessionals, fetchServices])
-        .then(([clients, professionals, services]) => {
+          setClientOptions(clients.map((c: Client) => ({ value: c.id, label: c.name })));
+          setProfessionalOptions(professionals.map((p: SystemUser) => ({ value: p.id, label: p.name })));
           
-          // Quando tudo terminar, atualiza os estados das opções
-          setClientOptions(clients);
-          setProfessionalOptions(professionals);
-          setServiceOptions(services);
-
-          if (appointmentToEdit) {
-            setValue('clientId', { value: appointmentToEdit.client.id, label: appointmentToEdit.client.name });
-            setValue('professionalId', { value: appointmentToEdit.professional.id, label: appointmentToEdit.professional.name });
-            setValue('serviceId', appointmentToEdit.service.id);
-            setValue('appointmentTime', format(new Date(appointmentToEdit.appointmentDate), 'HH:mm'));
-            setValue('price', appointmentToEdit.price);
-            setValue('observations', appointmentToEdit.observations || '');
-          } else {
-            reset({ clientId: null, professionalId: null, serviceId: undefined, appointmentTime: '', price: undefined, observations: '' });
-          }
+          // Guarda as listas completas para lógica de filtro
+          setAllProfessionals(professionals);
+          setAllServices(services);
         })
         .catch(error => {
           console.error("Erro ao buscar dados para o modal:", error);
           toast.error("Não foi possível carregar os dados do formulário.");
+        })
+        .finally(() => {
+          setAreOptionsLoading(false);
         });
     }
-  }, [isOpen, appointmentToEdit, reset, setValue]);
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (isOpen && !areOptionsLoading) {
+      if (appointmentToEdit) {
+        // MODO EDITAR
+        const professional = allProfessionals.find(p => p.id === appointmentToEdit.professional.id);
+        setSelectedProfessional(professional || null);
+
+        setValue('clientId', { value: appointmentToEdit.client.id, label: appointmentToEdit.client.name });
+        setValue('professionalId', professional ? { value: professional.id, label: professional.name } : null);
+        setValue('serviceId', appointmentToEdit.service.id);
+        setValue('appointmentTime', format(new Date(appointmentToEdit.appointmentDate), 'HH:mm'));
+        setValue('price', appointmentToEdit.price);
+        setValue('observations', appointmentToEdit.observations || '');
+      } else {
+        // MODO CRIAR
+        setSelectedProfessional(null);
+        reset({
+          clientId: null,
+          professionalId: null,
+          serviceId: undefined,
+          appointmentTime: '',
+          price: undefined,
+          observations: ''
+        });
+      }
+    }
+  }, [isOpen, areOptionsLoading, appointmentToEdit, allProfessionals, reset, setValue]);
+
+  // LÓGICA DE FILTRO EM CASCATA
+  const availableServices = useMemo(() => {
+    if (!selectedProfessional) return [];
+    return allServices.filter(service => 
+      selectedProfessional.specialties.includes(service.serviceType)
+    );
+  }, [selectedProfessional, allServices]);
 
   const onSubmit: SubmitHandler<FormData> = async (formData) => {
     const datePart = format(selectedDate, 'yyyy-MM-dd');
@@ -169,17 +206,30 @@ export function AppointmentModal({ isOpen, onRequestClose, onSaveSuccess, select
               <div>
                   <label>Profissional</label>
                   <Controller
-                      name="professionalId"
-                      control={control}
-                      rules={{ required: true }}
-                      render={({ field }) => <Select {...field} options={professionalOptions} placeholder="Selecione um profissional..." />}
+                    name="professionalId"
+                    control={control}
+                    rules={{ required: true }}
+                    render={({ field }) => (
+                      <Select 
+                        {...field} 
+                        options={professionalOptions}
+                        isLoading={areOptionsLoading}
+                        placeholder="Selecione um profissional..." 
+                        onChange={option => {
+                          field.onChange(option);
+                          const prof = allProfessionals.find(p => p.id === option?.value);
+                          setSelectedProfessional(prof || null);
+                          setValue('serviceId', undefined);
+                        }}
+                      />
+                    )}
                   />
               </div>
               <div>
                   <label>Serviço</label>
-                  <select {...register("serviceId", { required: true })} className="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
-                      <option value="">Selecione um serviço...</option>
-                      {serviceOptions.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                  <select {...register("serviceId", { required: true })} disabled={!selectedProfessional || areOptionsLoading} className="mt-1 block w-full ...">
+                    <option value="">{selectedProfessional ? "Selecione um serviço..." : "Selecione um profissional"}</option>
+                    {availableServices.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
                   </select>
           </div>
           

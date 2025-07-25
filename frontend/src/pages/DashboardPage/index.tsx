@@ -18,7 +18,7 @@ const decodeToken = (token: string) => {
 };
 
 export function DashboardPage() {
-  const { token } = useAuth();
+  const { user, token } = useAuth();
 
   const getUserNameFromToken = () => {
     if (token) {
@@ -104,28 +104,39 @@ export function DashboardPage() {
     fetchAppointments();
   }, [currentDate, refreshTrigger, token]);
 
+  // --- LÓGICA PARA ENCONTRAR O PRÓXIMO AGENDAMENTO ---
   const findNextAppointment = () => {
     const now = new Date();
     
-    const upcomingAppointments = appointments.filter(app => 
+    // Se não tivermos um usuário logado, não há o que procurar.
+    if (!user) return null;
+
+    // Filtra apenas os agendamentos DESTE profissional/usuário
+    const userAppointments = appointments.filter(app => app.professional.id === user.id);
+
+    // A partir da lista pessoal, filtra os status ativos e futuros
+    const upcomingAppointments = userAppointments.filter(app => 
       (app.status === 'SCHEDULED' || app.status === 'CONFIRMED') &&
       new Date(app.appointmentDate) > now
     );
 
+    // Se não houver nenhum, retorna nada
     if (upcomingAppointments.length === 0) {
       return null;
     }
 
+    // Ordena para garantir que o mais próximo venha primeiro
     upcomingAppointments.sort((a, b) => new Date(a.appointmentDate).getTime() - new Date(b.appointmentDate).getTime());
     
+    // Retorna o primeiro da lista, que é o próximo
     return upcomingAppointments[0];
   };
+
+  const nextAppointment = findNextAppointment();
 
   const handleDateChange = (newDate: Date) => {
     setCurrentDate(newDate);
   };
-
-  const nextAppointment = findNextAppointment();
 
   // Funções para formatação
   const formatTime = (dateString: string) => {

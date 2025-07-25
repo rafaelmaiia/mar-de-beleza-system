@@ -6,6 +6,7 @@ import { ProtectedRoute } from './components/ProtectedRoute';
 import { ServiceManagementPage } from './pages/ServiceManagementPage';
 import { UserManagementPage } from './pages/UserManagementPage';
 import { ClientManagementPage } from './pages/ClientManagementPage';
+import { SettingsPage } from './pages/SettingsPage';
 
 function App() {
   return (
@@ -62,6 +63,14 @@ function App() {
             <ClientManagementPage />
           </ProtectedRoute>
         } 
+        />
+        <Route 
+          path="/settings"
+          element={
+            <ProtectedRoute>
+              <SettingsPage />
+            </ProtectedRoute>
+          } 
         />
       </Routes>
     </>

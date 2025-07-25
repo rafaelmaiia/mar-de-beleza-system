@@ -1,3 +1,12 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@700&display=swap');
 
 @import "tailwindcss";
+
+/* Estilos para o toggle switch */
+.toggle-checkbox:checked {
+    right: 0;
+    border-color: #4f46e5; /* indigo-600 */
+}
+.toggle-checkbox:checked + .toggle-label {
+    background-color: #4f46e5; /* indigo-600 */
+}
