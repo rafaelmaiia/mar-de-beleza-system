@@ -50,9 +50,12 @@ public class SystemUser implements UserDetails {
     @Column(name = "specialty", nullable = false)
     private Set<ServiceType> specialties = new HashSet<>();
 
+    @Column(nullable = false)
+    private boolean canBeScheduled = true; // Por padrão, usuários podem ser agendados
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of(new SimpleGrantedAuthority(this.role.name()));
+        return List.of(new SimpleGrantedAuthority("ROLE_" + this.role.name()));
     }
 
     @Override

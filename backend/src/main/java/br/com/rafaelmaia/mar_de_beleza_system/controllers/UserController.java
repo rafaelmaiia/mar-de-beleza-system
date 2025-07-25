@@ -1,7 +1,7 @@
 package br.com.rafaelmaia.mar_de_beleza_system.controllers;
 
 import br.com.rafaelmaia.mar_de_beleza_system.controllers.docs.UserControllerDocs;
-import br.com.rafaelmaia.mar_de_beleza_system.domain.entity.SystemUser;
+import br.com.rafaelmaia.mar_de_beleza_system.dto.PasswordChangeRequestDTO;
 import br.com.rafaelmaia.mar_de_beleza_system.dto.UserRequestDTO;
 import br.com.rafaelmaia.mar_de_beleza_system.dto.UserResponseDTO;
 import br.com.rafaelmaia.mar_de_beleza_system.services.UserService;
@@ -16,8 +16,6 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import java.net.URI;
 import java.util.List;
 
-import org.springframework.security.core.Authentication;
-
 @RestController
 @RequestMapping("/api/v1/users")
 @RequiredArgsConstructor
@@ -30,8 +28,9 @@ public class UserController implements UserControllerDocs {
     @GetMapping
     @PreAuthorize("isAuthenticated()")
     @Override
-    public ResponseEntity<List<UserResponseDTO>> findAll() {
-        return ResponseEntity.ok(userService.findAllUsers());
+    public ResponseEntity<List<UserResponseDTO>> findAll(
+            @RequestParam(required = false) Boolean canBeScheduled) {
+        return ResponseEntity.ok(userService.findAllUsers(canBeScheduled));
     }
 
     // ADMINS ou o próprio usuário podem ver seus detalhes
@@ -67,6 +66,13 @@ public class UserController implements UserControllerDocs {
     @Override
     public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
         userService.deleteUser(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/{id}/change-password")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN') or #id == authentication.principal.id")
+    public ResponseEntity<Void> changePassword(@PathVariable Long id, @RequestBody @Valid PasswordChangeRequestDTO dto) {
+        userService.changePassword(id, dto);
         return ResponseEntity.noContent().build();
     }
 }

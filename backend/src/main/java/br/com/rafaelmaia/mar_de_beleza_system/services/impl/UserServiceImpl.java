@@ -2,11 +2,13 @@ package br.com.rafaelmaia.mar_de_beleza_system.services.impl;
 
 import br.com.rafaelmaia.mar_de_beleza_system.domain.entity.Contact;
 import br.com.rafaelmaia.mar_de_beleza_system.domain.entity.SystemUser;
+import br.com.rafaelmaia.mar_de_beleza_system.dto.PasswordChangeRequestDTO;
 import br.com.rafaelmaia.mar_de_beleza_system.dto.UserRequestDTO;
 import br.com.rafaelmaia.mar_de_beleza_system.dto.UserResponseDTO;
 import br.com.rafaelmaia.mar_de_beleza_system.repository.AppointmentRepository;
 import br.com.rafaelmaia.mar_de_beleza_system.repository.SystemUserRepository;
 import br.com.rafaelmaia.mar_de_beleza_system.services.UserService;
+import br.com.rafaelmaia.mar_de_beleza_system.services.exceptions.BusinessRuleException;
 import br.com.rafaelmaia.mar_de_beleza_system.services.exceptions.DataIntegrityViolationException;
 import br.com.rafaelmaia.mar_de_beleza_system.services.exceptions.ObjectNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -30,6 +32,31 @@ public class UserServiceImpl implements UserService {
     private static final Logger logger = LoggerFactory.getLogger(UserServiceImpl.class);
 
     @Override
+    @Transactional
+    public void changePassword(Long userId, PasswordChangeRequestDTO dto) {
+        logger.info("Iniciando processo de alteração de senha para o usuário ID: {}", userId);
+
+        // Verifica se a nova senha e a confirmação são iguais
+        if (!dto.newPassword().equals(dto.confirmationPassword())) {
+            throw new BusinessRuleException("A nova senha e a confirmação não conferem.");
+        }
+
+        SystemUser user = repository.findById(userId)
+                .orElseThrow(() -> new ObjectNotFoundException("Usuário não encontrado."));
+
+        // Verifica se a senha atual informada bate com a senha salva no banco
+        if (!passwordEncoder.matches(dto.currentPassword(), user.getPassword())) {
+            throw new BusinessRuleException("A senha atual está incorreta.");
+        }
+
+        // Se estiver tudo ok, criptografa e salva a nova senha
+        user.setPassword(passwordEncoder.encode(dto.newPassword()));
+        repository.save(user);
+
+        logger.info("Senha do usuário ID {} alterada com sucesso.", userId);
+    }
+
+    @Override
     @Transactional(readOnly = true)
     public UserResponseDTO findUserById(Long id) {
         logger.info("Buscando usuário com ID: {}", id);
@@ -40,9 +67,15 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<UserResponseDTO> findAllUsers() {
+    public List<UserResponseDTO> findAllUsers(Boolean canBeScheduled) {
         logger.info("Buscando todos os usuários");
-        return repository.findAll().stream()
+        List<SystemUser> userList;
+        if (canBeScheduled != null) {
+            userList = repository.findByCanBeScheduled(canBeScheduled); // Crie este método no repositório
+        } else {
+            userList = repository.findAll();
+        }
+        return userList.stream()
                 .map(UserResponseDTO::fromEntity)
                 .collect(Collectors.toList());
     }

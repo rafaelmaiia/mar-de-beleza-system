@@ -24,11 +24,11 @@ INSERT INTO tb_contact (phone, phone_is_whatsapp) VALUES
 --  Usuários do Sistema (tb_users) - Funcionárias e Admins
 -- =============================================
 -- IDs gerados: 1 (Rafael), 2 (Ana), 3 (Beatriz), 4 (Carla)
-INSERT INTO tb_users (name, email, password, role, contact_id) VALUES
-('Rafael Maia', 'rafaelmaia.developer@gmail.com', '$2a$10$jiyG0jSrKO6sOE.WdZWlZejNtJT6Ym.vh2jupPPO0dLNXfsBNQI8a', 'ADMIN', NULL),
-('Ana Silva', 'ana.silva@salao.com', '$2a$10$MFnIzsjNN9oi/NTwGP5y/.48bE./O/toxbWirWy32PKsa9hvSHMOa', 'STAFF', 1),
-('Beatriz Costa', 'beatriz.costa@salao.com', '$2a$10$vNUmX9XkFOt82MGFE/1ooeB/MqW70.CzTQYww3.PDQkPBARqvJMZ.', 'STAFF', 2),
-('Carla Dias', 'carla.dias@salao.com', '$2a$10$BTWjS34K.4UHpqBg5BnNVOqomMWlXm3KKQqGL46c8x4DJI4/0dL0i', 'STAFF', 3);
+INSERT INTO tb_users (name, email, password, role, contact_id, can_be_scheduled) VALUES
+('Rafael Maia', 'rafaelmaia.developer@gmail.com', '$2a$10$jiyG0jSrKO6sOE.WdZWlZejNtJT6Ym.vh2jupPPO0dLNXfsBNQI8a', 'ADMIN', NULL, false),
+('Ana Silva', 'ana.silva@salao.com', '$2a$10$MFnIzsjNN9oi/NTwGP5y/.48bE./O/toxbWirWy32PKsa9hvSHMOa', 'STAFF', 1, true),
+('Beatriz Costa', 'beatriz.costa@salao.com', '$2a$10$vNUmX9XkFOt82MGFE/1ooeB/MqW70.CzTQYww3.PDQkPBARqvJMZ.', 'STAFF', 2, true),
+('Carla Dias', 'carla.dias@salao.com', '$2a$10$BTWjS34K.4UHpqBg5BnNVOqomMWlXm3KKQqGL46c8x4DJI4/0dL0i', 'STAFF', 3, true);
 
 
 -- =============================================
