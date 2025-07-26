@@ -1,4 +1,4 @@
-export const statusTranslations = {
+export const statusTranslations: { [key: string]: string } = {
   SCHEDULED: 'Agendado',
   CONFIRMED: 'Confirmado',
   DONE: 'Concluído',
@@ -7,7 +7,7 @@ export const statusTranslations = {
   RESCHEDULED: 'Reagendado',
 };
 
-export const statusStyles = {
+export const statusStyles: { [key: string]: { border: string; bg: string; text: string } } = {
   'Agendado':    { border: 'border-yellow-500', bg: 'bg-yellow-100', text: 'text-yellow-800' },
   'Confirmado':  { border: 'border-blue-500',   bg: 'bg-blue-100',   text: 'text-blue-800'   },
   'Concluído':   { border: 'border-green-500',  bg: 'bg-green-100',  text: 'text-green-800'  },

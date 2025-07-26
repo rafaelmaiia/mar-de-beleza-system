@@ -31,6 +31,7 @@ public class AppointmentController implements AppointmentControllerDocs {
 
     @PostMapping
     @Override
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<AppointmentResponseDTO> create(@RequestBody @Valid AppointmentRequestDTO request) {
         AppointmentResponseDTO newAppointmentDTO = appointmentService.create(request);
 
@@ -44,22 +45,42 @@ public class AppointmentController implements AppointmentControllerDocs {
 
     @GetMapping
     @Override
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Page<AppointmentResponseDTO>> findAll(
-            @RequestParam(value = "date", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)LocalDate date,
-            @RequestParam(value = "professionalId", required = false) Long professionalId,
-            @RequestParam(value = "clientId", required = false) Long clientId,
+            // Parâmetros para o filtro de intervalo de datas (pag. de Gerenciamento)
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+
+            // Parâmetro para o filtro de dia único (Dashboard)
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+
+            // Outros filtros
+            @RequestParam(required = false) Long professionalId,
+            @RequestParam(required = false) Long clientId,
+            @RequestParam(required = false) String status,
+
             Pageable pageable) {
-        return ResponseEntity.ok(appointmentService.findAllAppointments(date, professionalId, clientId, pageable));
+
+        // --- LÓGICA DE DECISÃO ---
+        // Se o parâmetro 'date' foi enviado (pelo Dashboard), usamos a busca simples por dia.
+        if (date != null) {
+            return ResponseEntity.ok(appointmentService.findAppointmentsByDate(date, pageable));
+        }
+
+        // Senão, usamos a busca avançada com todos os filtros (pela pág. de Gerenciamento).
+        return ResponseEntity.ok(appointmentService.findAllAppointments(startDate, endDate, professionalId, clientId, status, pageable));
     }
 
     @GetMapping("/{id}")
     @Override
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<AppointmentResponseDTO> findById(@PathVariable Long id) {
         return ResponseEntity.ok(appointmentService.findAppointmentById(id));
     }
 
     @RequestMapping(value = "/{id}", method = {RequestMethod.PUT, RequestMethod.PATCH})
     @Override
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<AppointmentResponseDTO> update(
             @PathVariable Long id,
             @RequestBody @Valid AppointmentRequestDTO request) {
@@ -68,6 +89,7 @@ public class AppointmentController implements AppointmentControllerDocs {
 
     @DeleteMapping("/{id}")
     @Override
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         appointmentService.delete(id);
         return ResponseEntity.noContent().build();

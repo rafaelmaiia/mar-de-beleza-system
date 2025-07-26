@@ -7,6 +7,7 @@ import { ServiceManagementPage } from './pages/ServiceManagementPage';
 import { UserManagementPage } from './pages/UserManagementPage';
 import { ClientManagementPage } from './pages/ClientManagementPage';
 import { SettingsPage } from './pages/SettingsPage';
+import { AppointmentManagementPage } from './pages/AppointmentManagementPage';
 
 function App() {
   return (
@@ -41,28 +42,36 @@ function App() {
           } 
         />
         <Route 
-        path="/services"
-        element={
-          <ProtectedRoute>
-            <ServiceManagementPage />
-          </ProtectedRoute>
-        } 
-        />
-        <Route 
-        path="/users"
-        element={
-            <ProtectedRoute allowedRoles={['ADMIN']}>
-                <UserManagementPage />
+          path="/appointments" 
+          element={
+            <ProtectedRoute>
+              <AppointmentManagementPage />
             </ProtectedRoute>
-        } 
+          } 
         />
         <Route 
-        path="/clients"
-        element={
-          <ProtectedRoute>
-            <ClientManagementPage />
-          </ProtectedRoute>
-        } 
+          path="/services"
+          element={
+            <ProtectedRoute>
+              <ServiceManagementPage />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/users"
+          element={
+            <ProtectedRoute allowedRoles={['ADMIN']}>
+              <UserManagementPage />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/clients"
+          element={
+            <ProtectedRoute>
+              <ClientManagementPage />
+            </ProtectedRoute>
+          } 
         />
         <Route 
           path="/settings"

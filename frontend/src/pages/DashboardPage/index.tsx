@@ -69,22 +69,25 @@ export function DashboardPage() {
   };
 
   useEffect(() => {
-    if (!token) {
+    const fetchAppointments = async () => {
+      if (!token || !user) {
         setIsLoading(false);
         return;
-    }
-
-    const fetchAppointments = async () => {
+      }
+      
       setIsLoading(true);
       setError(null);
+      
+      const dateString = format(currentDate, 'yyyy-MM-dd');
 
-      const today = format(currentDate, 'yyyy-MM-dd');
+      const params = new URLSearchParams({
+          date: dateString,
+          sort: 'appointmentDate,asc'
+      });
 
       try {
-        const response = await fetch(`http://localhost:8080/api/v1/appointments?date=${today}&sort=appointmentDate,asc`, {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
+          const response = await fetch(`http://localhost:8080/api/v1/appointments?${params.toString()}`, {
+              headers: { 'Authorization': `Bearer ${token}` }
         });
 
         if (!response.ok) {
@@ -102,7 +105,7 @@ export function DashboardPage() {
     };
 
     fetchAppointments();
-  }, [currentDate, refreshTrigger, token]);
+  }, [token, refreshTrigger, currentDate]);
 
   // --- LÓGICA PARA ENCONTRAR O PRÓXIMO AGENDAMENTO ---
   const findNextAppointment = () => {

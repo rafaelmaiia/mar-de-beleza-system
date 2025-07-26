@@ -1,7 +1,7 @@
 package br.com.rafaelmaia.mar_de_beleza_system.controllers.docs;
 
-import br.com.rafaelmaia.mar_de_beleza_system.dto.AppointmentResponseDTO;
 import br.com.rafaelmaia.mar_de_beleza_system.dto.AppointmentRequestDTO;
+import br.com.rafaelmaia.mar_de_beleza_system.dto.AppointmentResponseDTO;
 import br.com.rafaelmaia.mar_de_beleza_system.dto.StatusUpdateRequestDTO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
@@ -12,10 +12,11 @@ import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
 
 import java.time.LocalDate;
-import java.util.List;
 
 public interface AppointmentControllerDocs {
 
@@ -63,7 +64,7 @@ public interface AppointmentControllerDocs {
                     @ApiResponse(description = "Internal Server Error", responseCode = "500", content = @Content)
             }
     )
-    ResponseEntity<Page<AppointmentResponseDTO>> findAll(LocalDate date, Long professionalId, Long clientId, Pageable pageable);
+    ResponseEntity<Page<AppointmentResponseDTO>> findAll(LocalDate startDate, LocalDate endDate, LocalDate date, Long professionalId, Long clientId, String status, Pageable pageable);
 
     @Operation(summary = "Find a Appointment",
             description = "Find a specific Appointment by their ID",

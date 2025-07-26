@@ -53,9 +53,16 @@ public class AppointmentServiceImpl implements AppointmentService {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<AppointmentResponseDTO> findAllAppointments(LocalDate date, Long professionalId, Long clientId, Pageable pageable) {
-        // Aplica filtros dinâmicos por data, cliente e profissional
-        Specification<Appointment> spec = AppointmentSpecification.withFilters(date, professionalId, clientId);
+    public Page<AppointmentResponseDTO> findAppointmentsByDate(LocalDate date, Pageable pageable) {
+        Specification<Appointment> spec = AppointmentSpecification.byDate(date);
+        return appointmentRepository.findAll(spec, pageable).map(AppointmentResponseDTO::fromEntity);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<AppointmentResponseDTO> findAllAppointments(LocalDate startDate, LocalDate endDate, Long professionalId, Long clientId, String status, Pageable pageable) {
+        // Aplica filtros dinâmicos por data, cliente, profissional e status
+        Specification<Appointment> spec = AppointmentSpecification.withFilters(startDate, endDate, professionalId, clientId, status);
 
         Page<Appointment> appointmentPage = appointmentRepository.findAll(spec, pageable);
 

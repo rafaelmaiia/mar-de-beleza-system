@@ -9,8 +9,6 @@ import br.com.rafaelmaia.mar_de_beleza_system.services.ClientService;
 import br.com.rafaelmaia.mar_de_beleza_system.services.exceptions.DataIntegrityViolationException;
 import br.com.rafaelmaia.mar_de_beleza_system.services.exceptions.ObjectNotFoundException;
 import lombok.RequiredArgsConstructor;
-import org.modelmapper.ModelMapper;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

@@ -2,7 +2,7 @@ import Modal from 'react-modal';
 import toast from 'react-hot-toast';
 import { useAuth } from '../../hooks/useAuth';
 import type { Appointment } from '../../types/appointment';
-import { statusTranslations, statusStyles } from '../AppointmentCard/styles';
+import { statusTranslations, statusStyles } from '../../constants/statusConstants';
 
 type StatusUpdateModalProps = {
   isOpen: boolean;

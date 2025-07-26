@@ -1,5 +1,5 @@
 import type { Appointment } from '../../types/appointment';
-import { statusTranslations, statusStyles } from './styles';
+import { statusTranslations, statusStyles } from '../../constants/statusConstants.ts';
 
 type AppointmentCardProps = {
   appointment: Appointment;

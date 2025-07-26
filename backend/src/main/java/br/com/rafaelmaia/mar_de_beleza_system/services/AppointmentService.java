@@ -7,12 +7,12 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import java.time.LocalDate;
-import java.util.List;
 
 public interface AppointmentService {
 
     AppointmentResponseDTO findAppointmentById(Long id);
-    Page<AppointmentResponseDTO> findAllAppointments(LocalDate date, Long professionalId, Long clientId, Pageable pageable);
+    Page<AppointmentResponseDTO> findAllAppointments(LocalDate startDate, LocalDate endDate, Long professionalId, Long clientId, String status, Pageable pageable);
+    Page<AppointmentResponseDTO> findAppointmentsByDate(LocalDate date, Pageable pageable);
     AppointmentResponseDTO create(AppointmentRequestDTO obj);
     AppointmentResponseDTO update(Long id, AppointmentRequestDTO obj);
     void delete(Long id);

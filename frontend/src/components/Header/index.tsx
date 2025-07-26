@@ -85,7 +85,7 @@ export function Header({ title }: HeaderProps) {
               role="menu"
               >
               <div className="py-1" role="none">
-                <Link to="/dashboard" className="text-gray-700 block px-4 py-2 text-sm hover:bg-gray-100" role="menuitem">Gerenciar Agendamentos</Link>
+                <Link to="/appointments" className="text-gray-700 block px-4 py-2 text-sm hover:bg-gray-100" role="menuitem">Gerenciar Agendamentos</Link>
                 <Link to="/clients" className="text-gray-700 block px-4 py-2 text-sm hover:bg-gray-100" role="menuitem">Gerenciar Clientes</Link>
                 
                 {/* --- LÓGICA PERMISSÃO --- */}
