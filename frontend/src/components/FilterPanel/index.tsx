@@ -87,6 +87,12 @@ export function FilterPanel({ filters, onFilterChange, onClearFilters }: FilterP
                     placeholder="Selecione..."
                     className="mt-1"
                     value={clientOptions.find(c => c.value === Number(filters.clientId)) || null}
+
+                    menuPortalTarget={document.body}
+                    styles={{ 
+                      menuPortal: base => ({ ...base, zIndex: 9999 }),
+                      menu: base => ({ ...base, zIndex: 9999, maxHeight: 320 })
+                    }}
                 />
             </div>
             <div>
