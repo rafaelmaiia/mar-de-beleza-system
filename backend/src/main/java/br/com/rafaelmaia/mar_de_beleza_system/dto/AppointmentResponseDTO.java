@@ -3,17 +3,18 @@ package br.com.rafaelmaia.mar_de_beleza_system.dto;
 import br.com.rafaelmaia.mar_de_beleza_system.domain.entity.Appointment;
 import br.com.rafaelmaia.mar_de_beleza_system.domain.enums.AppointmentStatus;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.stream.Collectors;
 
 public record AppointmentResponseDTO(
         Long id,
         ClientResponseDTO client,
+        SalonServiceResponseDTO service,
+        UserResponseDTO professional,
         LocalDateTime appointmentDate,
         AppointmentStatus status,
         String observations,
-        List<AppointmentItemResponseDTO> items
+        BigDecimal price
 ) {
 
     public static AppointmentResponseDTO fromEntity(Appointment appointment) {
@@ -24,12 +25,12 @@ public record AppointmentResponseDTO(
         return new AppointmentResponseDTO(
             appointment.getId(),
             ClientResponseDTO.fromEntity(appointment.getClient()),
+            SalonServiceResponseDTO.fromEntity(appointment.getService()),
+            UserResponseDTO.fromEntity(appointment.getProfessional()),
             appointment.getAppointmentDate(),
             appointment.getStatus(),
             appointment.getObservations(),
-            appointment.getServices().stream()
-                    .map(AppointmentItemResponseDTO::fromEntity)
-                    .collect(Collectors.toList())
+            appointment.getPrice()
         );
     }
 }

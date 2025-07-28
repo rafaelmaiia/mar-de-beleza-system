@@ -1,7 +1,8 @@
 package br.com.rafaelmaia.mar_de_beleza_system.controllers.docs;
 
-import br.com.rafaelmaia.mar_de_beleza_system.dto.AppointmentResponseDTO;
 import br.com.rafaelmaia.mar_de_beleza_system.dto.AppointmentRequestDTO;
+import br.com.rafaelmaia.mar_de_beleza_system.dto.AppointmentResponseDTO;
+import br.com.rafaelmaia.mar_de_beleza_system.dto.StatusUpdateRequestDTO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -11,10 +12,11 @@ import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
 
 import java.time.LocalDate;
-import java.util.List;
 
 public interface AppointmentControllerDocs {
 
@@ -62,7 +64,7 @@ public interface AppointmentControllerDocs {
                     @ApiResponse(description = "Internal Server Error", responseCode = "500", content = @Content)
             }
     )
-    ResponseEntity<Page<AppointmentResponseDTO>> findAll(LocalDate date, Long professionalId, Long clientId, Pageable pageable);
+    ResponseEntity<Page<AppointmentResponseDTO>> findAll(LocalDate startDate, LocalDate endDate, LocalDate date, Long professionalId, Long clientId, String status, Pageable pageable);
 
     @Operation(summary = "Find a Appointment",
             description = "Find a specific Appointment by their ID",
@@ -112,4 +114,21 @@ public interface AppointmentControllerDocs {
             }
     )
     ResponseEntity<Void> delete(@PathVariable Long id);
+
+    @PatchMapping("/{id}/status")
+    @Operation(summary = "Atualiza apenas o status de um agendamento",
+            description = "Endpoint rápido para modificar apenas o status de um agendamento existente (ex: para Confirmado, Concluído, etc.). Acessível por qualquer usuário autenticado.",
+            tags = {"Appointment"},
+            responses = {
+                    @ApiResponse(description = "Success", responseCode = "200", content = @Content(schema = @Schema(implementation = AppointmentResponseDTO.class))),
+                    @ApiResponse(description = "Bad Request (Validation Error)", responseCode = "400", content = @Content),
+                    @ApiResponse(description = "Unauthorized", responseCode = "401", content = @Content),
+                    @ApiResponse(description = "Forbidden", responseCode = "403", content = @Content),
+                    @ApiResponse(description = "Not Found", responseCode = "404", content = @Content)
+            }
+    )
+    ResponseEntity<AppointmentResponseDTO> updateStatus(
+            @PathVariable Long id,
+            @RequestBody @Valid StatusUpdateRequestDTO statusUpdateDTO);
+
 }

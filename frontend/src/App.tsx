@@ -1,30 +1,89 @@
-import {  useState, useEffect } from 'react';
-import { Professional } from './types/professional';
+import { Routes, Route } from 'react-router-dom';
+import { Toaster } from 'react-hot-toast';
+import { LoginPage } from './pages/LoginPage';
+import { DashboardPage } from './pages/DashboardPage';
+import { ProtectedRoute } from './components/ProtectedRoute';
+import { ServiceManagementPage } from './pages/ServiceManagementPage';
+import { UserManagementPage } from './pages/UserManagementPage';
+import { ClientManagementPage } from './pages/ClientManagementPage';
+import { SettingsPage } from './pages/SettingsPage';
+import { AppointmentManagementPage } from './pages/AppointmentManagementPage';
 
 function App() {
-  const [professionals, setProfessionals] = useState<Professional[]>([]);
-
-  useEffect(() => {
-    fetch('http://localhost:8080/api/v1/professionals')
-      .then(response => response.json())
-      .then(data => setProfessionals(data))
-      .catch(error => console.error('Erro ao buscar profissionais:', error));
-  }, []);
-
   return (
-    <div>
-      <h1>Mar de Beleza - Agendamentos</h1>
-      
-      <h2>Profissionais</h2>
-      <ul>
-        {professionals.map(professional => (
-          <li key={professional.id}>
-            {professional.name}
-          </li>
-        ))}
-      </ul>
-    </div>
-  )
+    <>
+      <Toaster 
+        position="top-right"
+        toastOptions={{
+          success: {
+            style: {
+              background: '#2ecc71',
+              color: 'white',
+            },
+          },
+          error: {
+            style: {
+              background: '#e74c3c',
+              color: 'white',
+            },
+          },
+        }}
+      />
+
+      <Routes>
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/" element={<LoginPage />} />
+        <Route 
+          path="/dashboard" 
+          element={
+            <ProtectedRoute>
+              <DashboardPage />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/appointments" 
+          element={
+            <ProtectedRoute>
+              <AppointmentManagementPage />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/services"
+          element={
+            <ProtectedRoute>
+              <ServiceManagementPage />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/users"
+          element={
+            <ProtectedRoute allowedRoles={['ADMIN']}>
+              <UserManagementPage />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/clients"
+          element={
+            <ProtectedRoute>
+              <ClientManagementPage />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/settings"
+          element={
+            <ProtectedRoute>
+              <SettingsPage />
+            </ProtectedRoute>
+          } 
+        />
+      </Routes>
+    </>
+  );
 }
 
-export default App
+export default App;

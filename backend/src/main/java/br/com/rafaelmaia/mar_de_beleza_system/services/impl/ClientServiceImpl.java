@@ -9,8 +9,8 @@ import br.com.rafaelmaia.mar_de_beleza_system.services.ClientService;
 import br.com.rafaelmaia.mar_de_beleza_system.services.exceptions.DataIntegrityViolationException;
 import br.com.rafaelmaia.mar_de_beleza_system.services.exceptions.ObjectNotFoundException;
 import lombok.RequiredArgsConstructor;
-import org.modelmapper.ModelMapper;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,6 +24,7 @@ public class ClientServiceImpl implements ClientService {
 
     private final ClientRepository repository;
 
+    @Transactional(readOnly = true)
     public ClientResponseDTO findClientById(Long id) {
         Client clientEntity = repository.findById(id)
                 .orElseThrow(() -> new ObjectNotFoundException("Cliente não encontrado com ID: " + id));
@@ -32,12 +33,11 @@ public class ClientServiceImpl implements ClientService {
     }
 
     @Override
-    public List<ClientResponseDTO> findAllClients() {
-        List<Client> clientList = repository.findAll();
+    @Transactional(readOnly = true)
+    public Page<ClientResponseDTO> findAllClients(Pageable pageable) {
+        Page<Client> clientPage = repository.findAll(pageable);
 
-        return clientList.stream()
-                .map(ClientResponseDTO::fromEntity)
-                .collect(Collectors.toList());
+        return clientPage.map(ClientResponseDTO::fromEntity);
     }
 
     @Override

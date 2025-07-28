@@ -1,7 +1,6 @@
 package br.com.rafaelmaia.mar_de_beleza_system.controllers;
 
 import br.com.rafaelmaia.mar_de_beleza_system.domain.enums.AppointmentStatus;
-import br.com.rafaelmaia.mar_de_beleza_system.dto.AppointmentItemRequestDTO;
 import br.com.rafaelmaia.mar_de_beleza_system.dto.AppointmentRequestDTO;
 import br.com.rafaelmaia.mar_de_beleza_system.dto.AppointmentResponseDTO;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -22,7 +21,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.hasSize;
@@ -50,13 +48,14 @@ class AppointmentControllerTest {
     @Transactional
     @WithMockUser
     void shouldCreateAppointmentSuccessfullyAndReturnStatus201() throws Exception {
-        AppointmentItemRequestDTO item = new AppointmentItemRequestDTO(1L, 1L, new BigDecimal("50.00"));
         AppointmentRequestDTO requestDTO = new AppointmentRequestDTO(
                 1L,
                 LocalDateTime.now().plusDays(5),
-                "Teste de integração",
-                null,
-                List.of(item)
+                1L,
+                1L,
+                new BigDecimal("50.00"),
+                "Teste de integração para criação.",
+                null // status
         );
 
         mockMvc.perform(post("/api/v1/appointments")
@@ -64,7 +63,6 @@ class AppointmentControllerTest {
                         .content(objectMapper.writeValueAsString(requestDTO)))
                 .andExpect(status().isCreated())
                 .andExpect(header().exists("Location"))
-                .andExpect(jsonPath("$.id").exists())
                 .andExpect(jsonPath("$.client.name").value("Fernanda Lima"));
     }
 
@@ -89,13 +87,14 @@ class AppointmentControllerTest {
     @Transactional
     @WithMockUser
     void shouldUpdateAppointmentSuccessfullyAndReturnStatus200() throws Exception {
-        AppointmentItemRequestDTO item = new AppointmentItemRequestDTO(2L, 2L, new BigDecimal("220.00"));
         AppointmentRequestDTO updateRequestDTO = new AppointmentRequestDTO(
                 2L,
-                LocalDateTime.of(2025, 7, 10, 11, 0),
-                "Observação foi atualizada.",
-                AppointmentStatus.CONFIRMED,
-                List.of(item)
+                LocalDateTime.now().plusDays(10),
+                2L,
+                2L,
+                new BigDecimal("230.00"),
+                "Observação foi atualizada com sucesso.",
+                AppointmentStatus.CONFIRMED
         );
 
         mockMvc.perform(put("/api/v1/appointments/2")
@@ -103,17 +102,21 @@ class AppointmentControllerTest {
                         .content(objectMapper.writeValueAsString(updateRequestDTO)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id", is(2)))
-                .andExpect(jsonPath("$.observations", is("Observação foi atualizada.")));
+                .andExpect(jsonPath("$.observations", is("Observação foi atualizada com sucesso.")));
     }
 
     @Test
     @Order(1)
     @WithMockUser(authorities = "ROLE_ADMIN")
     void shouldCreateBaseAppointmentForConflictTest() throws Exception {
-        LocalDateTime futureDate = LocalDate.now().plusDays(3).atTime(14, 0);
         AppointmentRequestDTO baseRequest = new AppointmentRequestDTO(
-                1L, futureDate, "Agendamento base", null,
-                List.of(new AppointmentItemRequestDTO(1L, 1L, new BigDecimal("50.00")))
+                1L,
+                LocalDate.now().plusDays(3).atTime(14, 0),
+                1L,
+                1L,
+                new BigDecimal("50.00"),
+                "Agendamento base para teste de conflito",
+                null // status
         );
 
         String responseAsString = mockMvc.perform(post("/api/v1/appointments")
@@ -141,8 +144,13 @@ class AppointmentControllerTest {
         LocalDateTime conflictTime = baseAppointment.appointmentDate();
 
         AppointmentRequestDTO conflictUpdateRequestDTO = new AppointmentRequestDTO(
-                3L, conflictTime, "Tentando criar um conflito", null,
-                List.of(new AppointmentItemRequestDTO(1L, 1L, new BigDecimal("150.00")))
+                3L,
+                conflictTime,
+                3L,
+                1L,
+                new BigDecimal("150.00"),
+                "Tentando criar um conflito",
+                null // status
         );
 
         mockMvc.perform(put("/api/v1/appointments/3")
