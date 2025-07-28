@@ -42,9 +42,9 @@ export function FilterPanel({ filters, onFilterChange, onClearFilters }: FilterP
       .then(data => setProfessionalOptions((data || []).map((p: SystemUser) => ({ value: p.id, label: p.name }))))
       .catch(error => console.error("Falha ao buscar profissionais.", error));
 
-    fetch('http://localhost:8080/api/v1/clients', { headers })
+    fetch('http://localhost:8080/api/v1/clients?size=1000', { headers })
       .then(res => res.json())
-      .then(data => setClientOptions((data.content || data).map((c: Client) => ({ value: c.id, label: c.name }))))
+      .then(data => setClientOptions((data.content || []).map((c: Client) => ({ value: c.id, label: c.name }))))
       .catch(error => console.error("Falha ao buscar clientes.", error));
   }, [token]);
 
