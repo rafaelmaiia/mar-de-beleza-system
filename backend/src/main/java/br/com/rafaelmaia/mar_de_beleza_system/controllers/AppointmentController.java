@@ -96,7 +96,7 @@ public class AppointmentController implements AppointmentControllerDocs {
     }
 
     @PatchMapping("/{id}/status")
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     @Override
     public ResponseEntity<AppointmentResponseDTO> updateStatus(@PathVariable Long id, @RequestBody @Valid StatusUpdateRequestDTO statusUpdateDTO) {
         return ResponseEntity.ok(appointmentService.updateStatus(id, statusUpdateDTO));
