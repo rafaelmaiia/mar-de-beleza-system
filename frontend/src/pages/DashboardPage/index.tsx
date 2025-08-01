@@ -8,6 +8,7 @@ import { DateSelector } from '../../components/DateSelector';
 import { AppointmentModal } from '../../components/AppointmentModal';
 import type { Appointment } from '../../types/appointment';
 import { StatusUpdateModal } from '../../components/StatusUpdateModal';
+import { PaymentModal } from '../../components/PaymentModal';
 
 const decodeToken = (token: string) => {
   try {
@@ -59,6 +60,23 @@ export function DashboardPage() {
   };
 
   const [statusUpdateAppointment, setStatusUpdateAppointment] = useState<Appointment | null>(null);
+
+  // ESTADO PARA O MODAL DE PAGAMENTO
+  const [paymentAppointment, setPaymentAppointment] = useState<Appointment | null>(null);
+
+  const handleStatusUpdateSuccess = (newStatus: string) => {
+    const appointmentThatWasUpdated = statusUpdateAppointment;
+    
+    // Fecha o modal de status
+    setStatusUpdateAppointment(null);
+    handleRefresh();
+
+    // --- A LÓGICA DE ORQUESTRAÇÃO ---
+    // Se o status clicado foi "Concluído", abre o modal de pagamento
+    if (newStatus === 'DONE' && appointmentThatWasUpdated) {
+      setPaymentAppointment(appointmentThatWasUpdated);
+    }
+  };
 
   const handleOpenStatusModal = (appointment: Appointment) => {
     setStatusUpdateAppointment(appointment);
@@ -261,12 +279,21 @@ export function DashboardPage() {
       {/* MODAL STATUS */}
       <StatusUpdateModal
         isOpen={!!statusUpdateAppointment}
-        onRequestClose={handleCloseStatusModal}
-        onUpdateSuccess={() => {
-          handleCloseStatusModal();
-          handleRefresh();
-        }}
+        onRequestClose={() => setStatusUpdateAppointment(null)}
+        onUpdateSuccess={handleStatusUpdateSuccess}
         appointment={statusUpdateAppointment}
+      />
+
+      {/* MODAL DE PAGAMENTO */}
+      <PaymentModal 
+        isOpen={!!paymentAppointment}
+        onRequestClose={() => setPaymentAppointment(null)}
+        onSaveSuccess={() => {
+          setPaymentAppointment(null);
+          handleRefresh(); // Atualiza a lista para mostrar o novo status 'DONE'
+        }}
+        // Passa o agendamento para o modal de pagamento
+        appointmentForPayment={paymentAppointment}
       />
     </div>
   );

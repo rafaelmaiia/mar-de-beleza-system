@@ -8,6 +8,7 @@ import { UserManagementPage } from './pages/UserManagementPage';
 import { ClientManagementPage } from './pages/ClientManagementPage';
 import { SettingsPage } from './pages/SettingsPage';
 import { AppointmentManagementPage } from './pages/AppointmentManagementPage';
+import { FinancialPage } from './pages/FinancialPage';
 
 function App() {
   return (
@@ -78,6 +79,14 @@ function App() {
           element={
             <ProtectedRoute>
               <SettingsPage />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/financeiro"
+          element={
+            <ProtectedRoute>
+              <FinancialPage />
             </ProtectedRoute>
           } 
         />

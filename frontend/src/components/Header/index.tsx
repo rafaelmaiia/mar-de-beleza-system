@@ -98,6 +98,11 @@ export function Header({ title }: HeaderProps) {
                 {/* --- FIM DA LÓGICA DE PERMISSÃO --- */}
                 
                 <Link to="/services" className="text-gray-700 block px-4 py-2 text-sm hover:bg-gray-100" role="menuitem">Gerenciar Serviços</Link>
+
+                {/* Link para a página de financeiro */}
+                <Link to="/financeiro" onClick={() => setIsMenuOpen(false)} className="text-gray-700 block px-4 py-2 text-sm hover:bg-gray-100 border-t border-gray-100 mt-1 pt-2" role="menuitem">
+                    Financeiro
+                </Link>
                 <Link to="/settings" className="text-gray-700 block px-4 py-2 text-sm hover:bg-gray-100 border-t border-gray-100 mt-1 pt-2" role="menuitem">Configurações</Link>
               </div>
             </div>
