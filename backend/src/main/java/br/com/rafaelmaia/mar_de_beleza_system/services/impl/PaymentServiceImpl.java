@@ -2,6 +2,7 @@ package br.com.rafaelmaia.mar_de_beleza_system.services.impl;
 
 import br.com.rafaelmaia.mar_de_beleza_system.domain.entity.Appointment;
 import br.com.rafaelmaia.mar_de_beleza_system.domain.entity.Payment;
+import br.com.rafaelmaia.mar_de_beleza_system.domain.enums.AppointmentStatus;
 import br.com.rafaelmaia.mar_de_beleza_system.domain.enums.PaymentMethod;
 import br.com.rafaelmaia.mar_de_beleza_system.domain.enums.PaymentStatus;
 import br.com.rafaelmaia.mar_de_beleza_system.dto.PaymentRequestDTO;
@@ -60,6 +61,13 @@ public class PaymentServiceImpl implements PaymentService {
         Appointment appointment = appointmentRepository.findById(request.appointmentId())
                 .orElseThrow(() -> new ObjectNotFoundException("Agendamento não encontrado com id " + request.appointmentId()));
 
+        // Regra de negócio: Não permite registrar pagamento para agendamentos que não sejam "Agendado" ou "Confirmado"
+        if (appointment.getStatus() != AppointmentStatus.SCHEDULED && appointment.getStatus() != AppointmentStatus.CONFIRMED) {
+            throw new BusinessRuleException(
+                    "Apenas agendamentos com status 'Agendado' ou 'Confirmado' podem ser concluídos e ter um pagamento registrado."
+            );
+        }
+
         Payment newPayment = Payment.builder()
                 .appointment(appointment)
                 .totalAmount(request.totalAmount())
@@ -69,8 +77,13 @@ public class PaymentServiceImpl implements PaymentService {
                 .observations(request.observations()).build();
 
         Payment savedPayment = paymentRepository.save(newPayment);
-        logger.info("Pagamento ID {} criado com sucesso.", savedPayment.getId());
 
+        // Após salvar o pagamento, atualiza o status do agendamento
+        appointment.setStatus(AppointmentStatus.DONE);
+        appointmentRepository.save(appointment);
+        logger.info("Status do Agendamento ID {} atualizado para DONE.", appointment.getId());
+
+        logger.info("Pagamento ID {} criado com sucesso.", savedPayment.getId());
         return PaymentResponseDTO.fromEntity(savedPayment);
     }
 

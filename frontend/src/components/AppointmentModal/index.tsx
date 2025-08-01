@@ -207,65 +207,92 @@ export function AppointmentModal({ isOpen, onRequestClose, onSaveSuccess, select
 
   return (
     <Modal isOpen={isOpen} onRequestClose={onRequestClose} style={customStyles}>
-        <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
-          <h3 className="text-xl font-semibold mb-4 text-gray-800">{appointmentToEdit ? 'Editar Agendamento' : 'Novo Agendamento'} para {format(selectedDate, 'dd/MM/yyyy')}</h3>
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-              <div>
-                  <label>Cliente</label>
-                  <Controller
-                      name="clientId"
-                      control={control}
-                      rules={{ required: true }}
-                      render={({ field }) => <Select {...field} options={clientOptions} placeholder="Busque um cliente..." />}
-                  />
-              </div>
-              <div>
-                  <label>Profissional</label>
-                  <Controller
-                    name="professionalId"
-                    control={control}
-                    rules={{ required: true }}
-                    render={({ field }) => (
-                      <Select 
-                        {...field} 
-                        options={professionalOptions}
-                        isLoading={areOptionsLoading}
-                        placeholder="Selecione um profissional..." 
-                        onChange={option => {
-                          field.onChange(option);
-                          const prof = allProfessionals.find(p => p.id === option?.value);
-                          setSelectedProfessional(prof || null);
-                          setValue('serviceId', undefined);
-                        }}
-                      />
-                    )}
-                  />
-              </div>
-              <div>
-                  <label>Serviço</label>
-                  <select {...register("serviceId", { required: true })} disabled={!selectedProfessional || areOptionsLoading} className="mt-1 block w-full ...">
-                    <option value="">{selectedProfessional ? "Selecione um serviço..." : "Selecione um profissional"}</option>
-                    {availableServices.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-                  </select>
+      <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
+        <h3 className="text-xl font-semibold mb-4 text-gray-800">
+          {appointmentToEdit ? 'Editar Agendamento' : 'Novo Agendamento'} para {format(selectedDate, 'dd/MM/yyyy')}
+        </h3>
+
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+
+          {/* Cliente */}
+          <div>
+            <label>Cliente</label>
+            <Controller
+                name="clientId"
+                control={control}
+                rules={{ required: true }}
+                render={({ field }) => <Select {...field} options={clientOptions} placeholder="Busque um cliente..." />}
+            />
           </div>
-          
+
+          {/* Profissional */}
+          <div>
+            <label>Profissional</label>
+            <Controller
+              name="professionalId"
+              control={control}
+              rules={{ required: true }}
+              render={({ field }) => (
+                <Select 
+                  {...field} 
+                  options={professionalOptions}
+                  isLoading={areOptionsLoading}
+                  placeholder="Selecione um profissional..." 
+                  onChange={option => {
+                    field.onChange(option);
+                    const prof = allProfessionals.find(p => p.id === option?.value);
+                    setSelectedProfessional(prof || null);
+                    setValue('serviceId', undefined);
+                  }}
+                />
+              )}
+            />
+          </div>
+
+          {/* Serviço */}
+          <div>
+            <label>Serviço</label>
+            <select 
+              {...register("serviceId", { 
+                required: true,
+                onChange: (e) => {
+                  const serviceId = parseInt(e.target.value, 10);
+                  const selectedService = allServices.find(s => s.id === serviceId);
+                  if (selectedService) {
+                    setValue('price', selectedService.price, { shouldValidate: true });
+                  }
+                },
+                setValueAs: v => v ? parseInt(v) : undefined
+              })} 
+              disabled={!selectedProfessional || areOptionsLoading} 
+              className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+              >
+              <option value="">{selectedProfessional ? "Selecione um serviço..." : "Selecione um profissional"}</option>
+              {availableServices.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+            </select>
+          </div>
+        
+          {/* Horário */}
           <div>
             <label htmlFor="appointmentTime" className="block text-sm font-medium text-gray-700">Horário</label>
             <input type="time" id="appointmentTime" {...register("appointmentTime", { required: "Horário é obrigatório" })} className="mt-1 block w-full border-gray-300 rounded-md shadow-sm" />
             {errors.appointmentTime && <p className="text-red-500 text-xs mt-1">{errors.appointmentTime.message}</p>}
           </div>
 
+          {/* Preço */}
           <div>
             <label htmlFor="price" className="block text-sm font-medium text-gray-700">Preço (R$)</label>
             <input type="number" step="0.01" id="price" {...register("price", { required: "Preço é obrigatório", valueAsNumber: true })} className="mt-1 block w-full border-gray-300 rounded-md shadow-sm" />
             {errors.price && <p className="text-red-500 text-xs mt-1">{errors.price.message}</p>}
           </div>
-
+          
+          {/* Observações */}
           <div>
             <label htmlFor="observations" className="block text-sm font-medium text-gray-700">Observações</label>
             <textarea id="observations" {...register("observations")} rows={3} className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"></textarea>
           </div>
-
+          
+          {/* Botões */}
           <div className="mt-6 flex justify-end gap-3">
             <button type="button" onClick={handleCloseModal} className="bg-gray-200 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-300">Cancelar</button>
             <button type="submit" className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600">Salvar</button>

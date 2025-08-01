@@ -7,7 +7,7 @@ import { statusTranslations, statusStyles } from '../../constants/statusConstant
 type StatusUpdateModalProps = {
   isOpen: boolean;
   onRequestClose: () => void;
-  onUpdateSuccess: () => void;
+  onUpdateSuccess: (newStatus: string) => void;
   appointment: Appointment | null;
 };
 
@@ -35,6 +35,14 @@ export function StatusUpdateModal({ isOpen, onRequestClose, onUpdateSuccess, app
   const handleStatusUpdate = async (newStatusKey: string) => {
     if (!appointment) return;
 
+    // --- A LÓGICA DE NEGÓCIO ---
+    // Se o novo status for 'DONE', não chamamos a API. Apenas avisa a página pai.
+    if (newStatusKey === 'DONE') {
+      onUpdateSuccess(newStatusKey); // Avisa o Dashboard que queremos concluir
+      onRequestClose(); // Fecha este modal
+      return; // Interrompe a função aqui
+    }
+
     const apiPayload = {
       status: newStatusKey,
     };
@@ -52,7 +60,7 @@ export function StatusUpdateModal({ isOpen, onRequestClose, onUpdateSuccess, app
       if (!response.ok) { throw new Error("Falha ao atualizar o status.") }
       
       toast.success('Status atualizado com sucesso!');
-      onUpdateSuccess();
+      onUpdateSuccess(newStatusKey);
       onRequestClose();
     } catch (err: any) {
       toast.error(err.message);

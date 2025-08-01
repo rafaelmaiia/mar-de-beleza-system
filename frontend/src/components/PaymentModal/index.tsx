@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import toast from 'react-hot-toast';
 import { useAuth } from '../../hooks/useAuth';
 import type { Payment, PaymentMethod } from '../../types/payment';
+import type { Appointment } from '../../types/appointment';
 import { paymentMethodTranslations } from '../../constants/paymentConstants';
 
 const customStyles = {
@@ -31,20 +32,39 @@ type PaymentModalProps = {
   isOpen: boolean;
   onRequestClose: () => void;
   onSaveSuccess: () => void;
-  paymentToEdit: Payment | null;
+  // Pode ser um Pagamento (para editar) ou um Agendamento (para criar um pagamento novo)
+  paymentToEdit?: Payment | null;
+  appointmentForPayment?: Appointment | null; 
 };
 
-export function PaymentModal({ isOpen, onRequestClose, onSaveSuccess, paymentToEdit }: PaymentModalProps) {
+export function PaymentModal({ isOpen, onRequestClose, onSaveSuccess, paymentToEdit, appointmentForPayment }: PaymentModalProps) {
   const { register, handleSubmit, reset, setValue, formState: { isSubmitting } } = useForm<FormData>();
   const { token } = useAuth();
 
+  const isEditMode = !!paymentToEdit;
+  const targetAppointment = paymentToEdit?.appointment || appointmentForPayment;
+
   useEffect(() => {
-    if (paymentToEdit) {
-      setValue('totalAmount', paymentToEdit.totalAmount);
-      setValue('paymentMethod', paymentToEdit.paymentMethod);
-      setValue('observations', paymentToEdit.observations || '');
+    // Roda sempre que o modal abre ou o modo (criar/editar) muda
+    if (isOpen) {
+      if (paymentToEdit) {
+        // MODO EDIÇÃO: Preenche com dados do pagamento que já existe
+        console.log("Modo Edição: Preenchendo formulário para o pagamento ID:", paymentToEdit.id);
+        setValue('totalAmount', paymentToEdit.totalAmount);
+        setValue('paymentMethod', paymentToEdit.paymentMethod);
+        setValue('observations', paymentToEdit.observations || '');
+      } else if (appointmentForPayment) {
+        // MODO CRIAÇÃO: Preenche com dados do agendamento que foi concluído
+        console.log("Modo Criação: Pré-preenchendo valor do agendamento:", appointmentForPayment.price);
+        
+        reset({
+            totalAmount: appointmentForPayment.price,
+            paymentMethod: 'PIX', // Define um padrão
+            observations: ''
+        });
+      }
     }
-  }, [paymentToEdit, isOpen, setValue]);
+  }, [isOpen, paymentToEdit, appointmentForPayment, setValue, reset]);
 
   const handleClose = () => {
     reset();
@@ -52,24 +72,29 @@ export function PaymentModal({ isOpen, onRequestClose, onSaveSuccess, paymentToE
   };
 
   const onSubmit: SubmitHandler<FormData> = async (data) => {
-    if (!paymentToEdit) return;
+    if (!targetAppointment) return;
 
     const apiPayload = {
-      appointmentId: paymentToEdit.appointment.id,
+      appointmentId: targetAppointment.id,
       totalAmount: data.totalAmount,
       paymentMethod: data.paymentMethod,
       observations: data.observations,
     };
     
+    const method = isEditMode ? 'PUT' : 'POST';
+    const url = isEditMode
+      ? `http://localhost:8080/api/v1/payments/${paymentToEdit!.id}`
+      : 'http://localhost:8080/api/v1/payments';
+    
     try {
-      const response = await fetch(`http://localhost:8080/api/v1/payments/${paymentToEdit.id}`, {
-        method: 'PUT',
+      const response = await fetch(url, {
+        method,
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify(apiPayload)
       });
-      if (!response.ok) throw new Error('Falha ao atualizar o pagamento.');
+      if (!response.ok) throw new Error(`Falha ao ${isEditMode ? 'atualizar' : 'registrar'} o pagamento.`);
       
-      toast.success('Pagamento atualizado com sucesso!');
+      toast.success(`Pagamento ${isEditMode ? 'atualizado' : 'registrado'} com sucesso!`);
       onSaveSuccess();
       handleClose();
     } catch (error: any) {
@@ -80,10 +105,12 @@ export function PaymentModal({ isOpen, onRequestClose, onSaveSuccess, paymentToE
   return (
     <Modal isOpen={isOpen} onRequestClose={handleClose} style={customStyles}>
       <div className="bg-white rounded-lg shadow-xl p-6 w-11/12 max-w-md">
-        <h3 className="text-xl font-semibold mb-4 text-gray-800">Editar Pagamento</h3>
-        {paymentToEdit && (
+        <h3 className="text-xl font-semibold mb-4 text-gray-800">
+          {isEditMode ? 'Editar Pagamento' : 'Registrar Pagamento'}
+        </h3>
+        {targetAppointment && (
             <p className="text-sm text-gray-600 mb-4">
-              Cliente: <span className="font-medium">{paymentToEdit.appointment.client.name}</span>
+              Cliente: <span className="font-medium">{targetAppointment.client.name}</span>
             </p>
         )}
         <form onSubmit={handleSubmit(onSubmit)}>
@@ -114,7 +141,7 @@ export function PaymentModal({ isOpen, onRequestClose, onSaveSuccess, paymentToE
           <div className="mt-6 flex justify-end gap-3">
             <button type="button" onClick={handleClose} className="bg-gray-200 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-300">Cancelar</button>
             <button type="submit" disabled={isSubmitting} className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 disabled:bg-blue-400">
-              {isSubmitting ? 'Salvando...' : 'Salvar Alterações'}
+              {isSubmitting ? 'Salvando...' : (isEditMode ? 'Salvar Alterações' : 'Salvar Pagamento')}
             </button>
           </div>
         </form>
