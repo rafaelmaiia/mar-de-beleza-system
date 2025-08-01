@@ -2,6 +2,7 @@ package br.com.rafaelmaia.mar_de_beleza_system.dto;
 
 import br.com.rafaelmaia.mar_de_beleza_system.domain.entity.Payment;
 import br.com.rafaelmaia.mar_de_beleza_system.domain.enums.PaymentMethod;
+import br.com.rafaelmaia.mar_de_beleza_system.domain.enums.PaymentStatus;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -12,6 +13,7 @@ public record PaymentResponseDTO(
         BigDecimal totalAmount,
         PaymentMethod paymentMethod,
         LocalDateTime paymentDate,
+        PaymentStatus status,
         String observations
 ) {
 
@@ -26,6 +28,7 @@ public record PaymentResponseDTO(
                 payment.getTotalAmount(),
                 payment.getPaymentMethod(),
                 payment.getPaymentDate(),
+                payment.getStatus(),
                 payment.getObservations()
         );
     }

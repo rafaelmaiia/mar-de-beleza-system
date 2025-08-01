@@ -16,11 +16,9 @@ public class PaymentSpecification {
     public static Specification<Payment> withFilters(
             LocalDate startDate, LocalDate endDate, Long professionalId, PaymentStatus status) {
 
-        PaymentStatus statusToFilter = (status == null) ? PaymentStatus.PAID : status;
-
         return Specification.where(byProfessional(professionalId))
                 .and(byDateRange(startDate, endDate))
-                .and(byStatus(statusToFilter));
+                .and(byStatus(status));
     }
 
     // metodo para o intervalo de datas
